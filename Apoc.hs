@@ -67,3 +67,44 @@ replace xs n elem = let (ys,zs) = splitAt n xs
 replace2        :: [[a]] -> (Int,Int) -> a -> [[a]]
 replace2 xs (x,y) elem = replace xs y (replace (xs !! y) x elem)
 
+
+-- | Checks if a move is valid or not on the game board 
+isValidMove :: Board -> (Int,Int) -> (Int,Int) -> Bool
+isValidMove theBoard (x,y) (w,z)
+    |((getFromBoard theBoard (x,y)) == WK ) =               -- | A knights move is valid if it:
+        if (((abs (x-w))<3) && ((abs (y-z)))<3)             -- | moves 2 spaces on one axis, and one space on the other 
+           && (((abs (x-w)) + (abs (y-z))) == 3)            -- | (totaling 3 spaces)
+           && (((getFromBoard theBoard (w,z)) ==  E)        -- | and if the target space is empty 
+               || ((getFromBoard theBoard (w,z)) ==  BK)    -- |or contains an opponent's piece.
+               || ((getFromBoard theBoard (w,z)) ==  BP))
+        then True
+        else False
+
+    |((getFromBoard theBoard (x,y)) == BK ) = 
+        if (((abs (x-w))<3) && ((abs (y-z)))<3)
+           && (((abs (x-w)) + (abs (y-z))) == 3)
+           && (((getFromBoard theBoard (w,z)) ==  E)
+               || ((getFromBoard theBoard (w,z)) ==  WK)
+               || ((getFromBoard theBoard (w,z)) ==  WP))
+        then True
+        else False
+
+    |((getFromBoard theBoard (x,y)) == WP ) =               -- | A pawns move is valid if it:
+        if (((abs (x-w)) == 0) && ((y-z) == -1))            -- | moves one space vertically into an open space
+        then True                                           -- | or move diagonally one space onto a space 
+        else if (((abs (x-w)) == 1) && ((y-z) == -1))       -- | occupied by an opponent's piece
+             && ( ((getFromBoard theBoard (w,z)) ==  BK)
+               || ((getFromBoard theBoard (w,z)) ==  BP))
+             then True
+             else False
+
+    |((getFromBoard theBoard (x,y)) == BP ) =
+        if (((abs (x-w)) == 0) && ((y-z) == 1))
+        then True
+        else if (((abs (x-w)) == 1) && ((y-z) == 1)) 
+             && ( ((getFromBoard theBoard (w,z)) ==  WK)
+               || ((getFromBoard theBoard (w,z)) ==  WP))
+             then True
+             else False
+
+    |((getFromBoard theBoard (x,y)) == E )  = False

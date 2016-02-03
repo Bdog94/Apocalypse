@@ -68,6 +68,26 @@ replace2        :: [[a]] -> (Int,Int) -> a -> [[a]]
 replace2 xs (x,y) elem = replace xs y (replace (xs !! y) x elem)
 
 
+--  | This method will determine the list of valid moves
+validMovesGenerator :: Board -> [  ((Int , Int) , (Int , Int))] -> [ ((Int , Int) , (Int , Int) )]
+validMovesGenerator theBoard [] = []
+validMovesGenerator theBoard ((x,y):xs) =  if isValidMove theBoard x y
+									   then [(x,y)] ++ validMovesGenerator theBoard xs
+									   else validMovesGenerator theBoard xs
+									   
+
+-- | Generates all possible moves
+--generateAllMoves :: () -> [ ((Int, Int), (Int, Int))]
+
+-- Note this is code that once it is done will be used to generate every possible move
+--generateAllMovesHelper :: Int -> [((Int, Int), (Int, Int))] -> [((Int, Int), (Int, Int))]
+--generateAllMovesHelper 0 list = list
+--generateAllMovesHelper 1 list = ((0, 0) , (0,0))
+--generateAllMovesHelper size list = 
+--generateAllMovesHelper size list  | size < 25 = [(5 - 25, 5)
+
+									  
+
 -- | Checks if a move is valid or not on the game board 
 isValidMove :: Board -> (Int,Int) -> (Int,Int) -> Bool
 isValidMove theBoard (x,y) (w,z)

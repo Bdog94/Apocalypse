@@ -63,9 +63,13 @@ pawnPromotion :: Chooser -> Bool
 
 pawnPromotion _ = True
 
-isWinner :: Chooser -> Chooser -> Maybe Player
+isWinner :: GameState -> Maybe Player
 
-isWinner _ _ = Nothing
+isWinner game = if elem (theBoard game) (char2Cell '+') 
+                || elem (theBoard game) (char2Cell '/')
+				then Just(Black)
+				else Nothing
+
 
 isClash :: Chooser -> Chooser -> Bool
 

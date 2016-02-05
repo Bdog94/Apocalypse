@@ -53,6 +53,26 @@ main' args = do
                                                    (getFromBoard (theBoard initBoard) ((fromJust move) !! 0)))
                                          ((fromJust move) !! 0)
                                          E))
+                                         
+gameLoop :: Chooser -> Chooser -> Bool
+
+gameLoop _ _  = True
+
+
+pawnPromotion :: Chooser -> Bool
+
+pawnPromotion _ = True
+
+isWinner :: Chooser -> Chooser -> Maybe Player
+
+isWinner _ _ = Nothing
+
+isClash :: Chooser -> Chooser -> Bool
+
+isClash _ _ = True
+
+
+
 
 ---2D list utility functions-------------------------------------------------------
 

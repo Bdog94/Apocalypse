@@ -63,13 +63,57 @@ pawnPromotion :: Chooser -> Bool
 
 pawnPromotion _ = True
 
+
+-- Game over conditions
+--One of the players looses all his/her pawns.  The other player is the winner. 
+--One of the players accumulates two penalty points.  The other player is the winner.
+--Both players pass on the same round. The one with the most pawns wins.
+
+
+-- | This method will return the winner or return Nothing.
+-- | Note it is not compatible with testing whether or not both players pass on the same round
+-- that functionality is easier to do in the gameLoop I believe
 isWinner :: GameState -> Maybe Player
 
-isWinner game = if elem (theBoard game) (char2Cell '+') 
-                || elem (theBoard game) (char2Cell '/')
-				then Just(Black)
-				else Nothing
+isWinner game | (blackPen game) >= 2 = Just(White)			--Black has 2 or more penalties which makes White the winner
+isWinner game | (whitePen game) >= 2 = Just(Black)			--White has 2 or more penalties which makes White the winner
 
+isWinner game = if    not (elem '/' (board2Str (theBoard game))) 
+				   || not (elem '+' (board2Str (theBoard game)))
+				then (if elem '/' (board2Str (theBoard game))
+					  then Just(White)
+					  else Just(Black))
+				else Nothing
+--Test Code For isWinner....				
+gameOverBoard1       :: GameState
+gameOverBoard1      = GameState Init 0 Init 0
+                  		[ [WK, E, E, E, WK],
+                		[E, E , E , E , E],
+                    	[E , E , E , E , E ],
+                    	[BP, E , E , E , BP],
+                    [	BK, BP, BP, BP, BK] ]
+
+gameOverBoard2       :: GameState
+gameOverBoard2      = GameState Init 0 Init 0
+                  		[ [WK, WP, E, E, WK],
+                		  [E, E , E , E , E],
+                    	  [E ,E , E , E , E ],
+                    	  [E, E , E , E , E],
+                          [BK, E, E,  E , BK] ]
+
+testBlackWin         :: Bool
+
+testBlackWin = if (isWinner gameOverBoard1 == Just(Black)) 
+				then True
+				else False
+				
+testWhiteWin         :: Bool
+
+testWhiteWin = if (isWinner gameOverBoard2 == Just(White)) 
+				then True
+				else False
+
+--End Of Test code for isWinner
 
 isClash :: Chooser -> Chooser -> Bool
 

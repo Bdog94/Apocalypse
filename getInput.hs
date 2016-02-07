@@ -10,7 +10,9 @@ import System.IO
 
 
 --This function will get arguments from the command line, if the user does not enter the arguments in the command line, 
---it will prompt them for an input. If the user doesnt type in human or greedy, the program will terminate
+--it will prompt them for an input. If the user doesnt type in human or greedy, the program will terminate. 
+
+--Note : The function does not compile if I do not use main, I will fix it so that it returns the given strings for blackInput or whiteInput
 getGameMode :: [String] = do 
     argList <- getArgs
     let blackChoice = head argList

@@ -54,10 +54,10 @@ main' args = do
                                          ((fromJust move) !! 0)
                                          E))
 
-    
-gameLoop :: GameState -> String -> String -> IO ()
+   
 -- If there is a winner on the board, or if both players have passed there turns. 
 -- If they have, do not continue with another turn
+gameLoop :: GameState -> String -> String -> IO ()
 gameLoop state wStrat bStrat =  if (blackPlay state == Passed) && (whitePlay state == Passed) || not(isWinner state == Nothing)
                                 then do 
                                         print state--handle win conditions here`
@@ -69,8 +69,30 @@ gameLoop state wStrat bStrat =  if (blackPlay state == Passed) && (whitePlay sta
                                         --if(bMove == Nothing)||(wMove == Nothing)
                                         gameLoop state wStrat bStrat
 
+										
+-- Takes the current GameState and the 2 players moves
+-- Returns an updated GameState with moves performed
+
+--Only works with Normal moves, doesn't account for pawn placement or goofs by the player
+
 updateState :: GameState -> Maybe ([(Int,Int)]) -> Maybe ([(Int,Int)]) -> GameState
-updateState    _ _ _ = initBoard                                    
+updateState state bMove wMove = GameState (if bMove == Nothing
+										   then Passed
+										   else Played (head (fromJust bMove), head(tail (fromJust bMove))))
+										   (blackPen state)
+										   (if wMove == Nothing
+										   then Passed
+										   else Played (head (fromJust wMove), head(tail (fromJust wMove))))
+										   (whitePen state)
+										   (replace2 (
+										   replace2 (
+										   replace2 (
+										   replace2 (theBoard state) ((fromJust bMove) !! 1)
+                                                   (getFromBoard (theBoard state) ((fromJust bMove) !! 0))) 
+												   ((fromJust bMove) !! 0) E)
+												   ((fromJust wMove) !! 1) 
+												   (getFromBoard (theBoard state) ((fromJust wMove) !! 0)))
+												   ((fromJust wMove) !! 0) E)
 --Takes a string from gameLoop, what kind of move to make, and picks the corresponding strategy and returns it's move 
 pickMove :: String -> GameState -> PlayType -> Player -> IO (Maybe[(Int,Int)])
 pickMove strat state playtype player = if strat == "human" 

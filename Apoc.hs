@@ -53,16 +53,35 @@ main' args = do
                                                    (getFromBoard (theBoard initBoard) ((fromJust move) !! 0)))
                                          ((fromJust move) !! 0)
                                          E))
-                                         
-gameLoop :: Chooser -> Chooser -> Bool
 
-gameLoop _ _  = True
+    
+gameLoop :: GameState -> String -> String -> IO ()
+-- If there is a winner on the board, or if both players have passed there turns. 
+-- If they have, do not continue with another turn
+gameLoop state wStrat bStrat =  if (blackPlay state == Passed) && (whitePlay state == Passed) || not(isWinner state == Nothing)
+                                then do 
+                                        print state--handle win conditions here`
+                                else do 
+                                        print state
+                                
+                                        bMove <- pickMove bStrat state Normal Black    
+                                        wMove <- pickMove wStrat state Normal White
+                                        --if(bMove == Nothing)||(wMove == Nothing)
+                                        gameLoop state wStrat bStrat
 
+updateState :: GameState -> Maybe ([(Int,Int)]) -> Maybe ([(Int,Int)]) -> GameState
+updateState    _ _ _ = initBoard                                    
+--Takes a string from gameLoop, what kind of move to make, and picks the corresponding strategy and returns it's move 
+pickMove :: String -> GameState -> PlayType -> Player -> IO (Maybe[(Int,Int)])
+pickMove strat state playtype player = if strat == "human" 
+                        then human state playtype player 
+                        else return Nothing
 
-pawnPromotion :: Chooser -> Bool
-
-pawnPromotion _ = True
-
+-- Checks if there is a pawn to be promoted on either side of the board
+pawnPromotion :: GameState -> Bool
+pawnPromotion state = if (elem BP (head (theBoard state))) || (elem WP (last (theBoard state)))
+                      then True
+                      else False
 
 -- Game over conditions
 --One of the players looses all his/her pawns.  The other player is the winner. 
@@ -75,53 +94,68 @@ pawnPromotion _ = True
 -- that functionality is easier to do in the gameLoop I believe
 isWinner :: GameState -> Maybe Player
 
-isWinner game | (blackPen game) >= 2 = Just(White)			--Black has 2 or more penalties which makes White the winner
-isWinner game | (whitePen game) >= 2 = Just(Black)			--White has 2 or more penalties which makes White the winner
+isWinner game | (blackPen game) >= 2 = Just(White)            --Black has 2 or more penalties which makes White the winner
+isWinner game | (whitePen game) >= 2 = Just(Black)            --White has 2 or more penalties which makes White the winner
 
 isWinner game = if    not (elem '/' (board2Str (theBoard game))) 
-				   || not (elem '+' (board2Str (theBoard game)))
-				then (if elem '/' (board2Str (theBoard game))
-					  then Just(White)
-					  else Just(Black))
-				else Nothing
---Test Code For isWinner....				
+                   || not (elem '+' (board2Str (theBoard game)))
+                then (if elem '/' (board2Str (theBoard game))
+                      then Just(White)
+                      else Just(Black))
+                else Nothing
+--Test Code For isWinner....                
 gameOverBoard1       :: GameState
 gameOverBoard1      = GameState Init 0 Init 0
-                  		[ [WK, E, E, E, WK],
-                		[E, E , E , E , E],
-                    	[E , E , E , E , E ],
-                    	[BP, E , E , E , BP],
-                    [	BK, BP, BP, BP, BK] ]
+                          [ [WK, E, E, E, WK],
+                        [E, E , E , E , E],
+                        [E , E , E , E , E ],
+                        [BP, E , E , E , BP],
+                    [    BK, BP, BP, BP, BK] ]
 
 gameOverBoard2       :: GameState
 gameOverBoard2      = GameState Init 0 Init 0
-                  		[ [WK, WP, E, E, WK],
-                		  [E, E , E , E , E],
-                    	  [E ,E , E , E , E ],
-                    	  [E, E , E , E , E],
+                          [ [WK, WP, E, E, WK],
+                          [E, E , E , E , E],
+                          [E ,E , E , E , E ],
+                          [E, E , E , E , E],
                           [BK, E, E,  E , BK] ]
 
 testBlackWin         :: Bool
 
 testBlackWin = if (isWinner gameOverBoard1 == Just(Black)) 
-				then True
-				else False
-				
+                then True
+                else False
+                
 testWhiteWin         :: Bool
 
 testWhiteWin = if (isWinner gameOverBoard2 == Just(White)) 
-				then True
-				else False
+                then True
+                else False
 
 --End Of Test code for isWinner
 
-isClash :: Chooser -> Chooser -> Bool
+isClash :: (Int,Int) -> (Int,Int) -> Bool
 
-isClash _ _ = True
+isClash (x,y) (w,z) = if ((x == w)&&(y == z))
+                      then True
+                      else False
 
-
-
-
+promoBoard2       :: GameState
+promoBoard2      = GameState Passed 0 Passed 0
+                          [ [WK, WP, E, E, WK],
+                          [E, E , E , E , E],
+                          [E ,WP , E , E , E ],
+                          [E, E , BP , E , E],
+                          [BK, E, E,  WP , BK] ]
+                          
+promoBoard1       :: GameState
+promoBoard1 = GameState Passed 0 Passed 0
+                          [ [WK, BP, E, E, WK],
+                          [E, E , E , E , E],
+                          [E ,WP , E , E , E ],
+                          [E, E , BP , E , E],
+                          [BK, E, E,  E , BK] ]
+                      
 ---2D list utility functions-------------------------------------------------------
 
 -- | Replaces the nth element in a row with a new element.
@@ -140,9 +174,9 @@ replace2 xs (x,y) elem = replace xs y (replace (xs !! y) x elem)
 validMovesGenerator :: Board -> [  ((Int , Int) , (Int , Int))] -> [ ((Int , Int) , (Int , Int) )]
 validMovesGenerator theBoard [] = []
 validMovesGenerator theBoard ((x,y):xs) =  if isValidMove theBoard x y
-									   then [(x,y)] ++ validMovesGenerator theBoard xs
-									   else validMovesGenerator theBoard xs
-									   
+                                       then [(x,y)] ++ validMovesGenerator theBoard xs
+                                       else validMovesGenerator theBoard xs
+                                       
 
 -- | Generates all possible moves
 --generateAllMoves :: () -> [ ((Int, Int), (Int, Int))]
@@ -154,7 +188,7 @@ validMovesGenerator theBoard ((x,y):xs) =  if isValidMove theBoard x y
 --generateAllMovesHelper size list = 
 --generateAllMovesHelper size list  | size < 25 = [(5 - 25, 5)
 
-									  
+                                      
 
 -- | Checks if a move is valid or not on the game board 
 isValidMove :: Board -> (Int,Int) -> (Int,Int) -> Bool

@@ -23,6 +23,56 @@ import System.IO.Unsafe
 import ApocTools
 import ApocStrategyHuman
 
+--TestCode 
+gameOverBoard1       :: GameState
+gameOverBoard1      = GameState Init 0 Init 0
+                          [ [WK, E, E, E, WK],
+                        [E, E , E , E , E],
+                        [E , E , E , E , E ],
+                        [BP, E , E , E , BP],
+                    [    BK, BP, BP, BP, BK] ]
+
+gameOverBoard2       :: GameState
+gameOverBoard2      = GameState Init 0 Init 0
+                          [ [WK, WP, E, E, WK],
+                          [E, E , E , E , E],
+                          [E ,E , E , E , E ],
+                          [E, E , E , E , E],
+                          [BK, E, E,  E , BK] ]
+
+testBlackWin         :: Bool
+
+testBlackWin = if (isWinner gameOverBoard1 == Just(Black)) 
+                then True
+                else False
+                
+testWhiteWin         :: Bool
+
+testWhiteWin = if (isWinner gameOverBoard2 == Just(White)) 
+                then True
+                else False
+
+
+promoBoard2       :: GameState
+promoBoard2      = GameState Passed 0 Passed 0
+                          [ [WK, WP, E, E, WK],
+                          [E, E , E , E , E],
+                          [E ,WP , E , E , E ],
+                          [E, E , BP , E , E],
+                          [BK, E, E,  WP , BK] ]
+                          
+promoBoard1       :: GameState
+promoBoard1 = GameState Passed 0 Passed 0
+                          [ [WK, BP, E, E, WK],
+                          [E, E , E , E , E],
+                          [E ,WP , E , E , E ],
+                          [E, E , BP , E , E],
+                          [BK, E, E,  E , BK] ]
+
+
+
+--EndTestCode
+
 
 ---Main-------------------------------------------------------------
 
@@ -125,36 +175,7 @@ isWinner game = if    not (elem '/' (board2Str (theBoard game)))
                       then Just(White)
                       else Just(Black))
                 else Nothing
---Test Code For isWinner....                
-gameOverBoard1       :: GameState
-gameOverBoard1      = GameState Init 0 Init 0
-                          [ [WK, E, E, E, WK],
-                        [E, E , E , E , E],
-                        [E , E , E , E , E ],
-                        [BP, E , E , E , BP],
-                    [    BK, BP, BP, BP, BK] ]
 
-gameOverBoard2       :: GameState
-gameOverBoard2      = GameState Init 0 Init 0
-                          [ [WK, WP, E, E, WK],
-                          [E, E , E , E , E],
-                          [E ,E , E , E , E ],
-                          [E, E , E , E , E],
-                          [BK, E, E,  E , BK] ]
-
-testBlackWin         :: Bool
-
-testBlackWin = if (isWinner gameOverBoard1 == Just(Black)) 
-                then True
-                else False
-                
-testWhiteWin         :: Bool
-
-testWhiteWin = if (isWinner gameOverBoard2 == Just(White)) 
-                then True
-                else False
-
---End Of Test code for isWinner
 
 isClash :: (Int,Int) -> (Int,Int) -> Bool
 
@@ -162,21 +183,7 @@ isClash (x,y) (w,z) = if ((x == w)&&(y == z))
                       then True
                       else False
 
-promoBoard2       :: GameState
-promoBoard2      = GameState Passed 0 Passed 0
-                          [ [WK, WP, E, E, WK],
-                          [E, E , E , E , E],
-                          [E ,WP , E , E , E ],
-                          [E, E , BP , E , E],
-                          [BK, E, E,  WP , BK] ]
-                          
-promoBoard1       :: GameState
-promoBoard1 = GameState Passed 0 Passed 0
-                          [ [WK, BP, E, E, WK],
-                          [E, E , E , E , E],
-                          [E ,WP , E , E , E ],
-                          [E, E , BP , E , E],
-                          [BK, E, E,  E , BK] ]
+
                       
 ---2D list utility functions-------------------------------------------------------
 

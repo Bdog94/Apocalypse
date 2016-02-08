@@ -12,7 +12,7 @@ import ApocTools
 -- | This function determines the move that the AI will take
 determineMove :: [ ((Int , Int) , (Int , Int) )] ->Chooser		
 
-determineMove [(source, dest)] b Normal player = return (Just([pickMove(sortMoves( evalMoves [(source,dest)] b player ) )]))			
+determineMove [(source, dest)] b Normal player = return (Just([(source), pickMove(sortMoves( evalMoves [(source,dest)] b player ) )]))			
 determineMove [(source, dest)] b PawnPlacement player = return (Nothing)
 
 
@@ -62,7 +62,7 @@ scoreMove :: Player -> Char -> Int
 
 scoreMove  Black 'X' = 2	--Black is taking out a White Knight
 scoreMove  White '#' = 2	--White is taking out a Black Knight
-scoreMove  Black '/' = 1    --Black is taking out a White Pawn
+scoreMove  Black '/' = 1    	--Black is taking out a White Pawn
 scoreMove  White '+' = 1 	--White is taking out a Black Pawn
 scoreMove  Black  c  = 0		 
 scoreMove  White  c  = 0

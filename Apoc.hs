@@ -125,7 +125,16 @@ gameLoop state wStrat bStrat =  if (blackPlay state == Passed) && (whitePlay sta
 
 --Only works with Normal moves, doesn't account for pawn placement or goofs by the player
 
+--TODO
+--Pawn promotion
+--Handle isValid
+--Only works with Normal moves, doesn't account for pawn placement or goofs by the player
+
 updateState :: GameState -> Maybe ([(Int,Int)]) -> Maybe ([(Int,Int)]) -> GameState
+updateState state Nothing Nothing = GameState Passed (blackPen state) Passed (whitePen state) (theBoard state)
+updateState state bMove wMove | (bMove == Nothing) || (wMove == Nothing) = if (bMove == Nothing)
+									  then GameState Passed (blackPen state) (moveType state (fromJust wMove) White) (whitePen state) (handlePlayerMove (theBoard state) (fromJust wMove) White)
+									  else GameState (moveType state (fromJust bMove) Black) (blackPen state) Passed (whitePen state) (handlePlayerMove (theBoard state) (fromJust bMove) Black)
 updateState state bMove wMove = GameState (if bMove == Nothing
 										   then Passed
 										   else Played (head (fromJust bMove), head(tail (fromJust bMove))))
@@ -143,6 +152,18 @@ updateState state bMove wMove = GameState (if bMove == Nothing
 												   ((fromJust wMove) !! 1) 
 												   (getFromBoard (theBoard state) ((fromJust wMove) !! 0)))
 												   ((fromJust wMove) !! 0) E)
+moveType :: GameState -> ([(Int, Int)]) -> Player -> Played
+
+moveType _ _ _ = Init
+
+handlePlayerMove :: Board -> ([(Int, Int)]) -> Player -> Board
+
+handlePlayerMove b _ _ = b
+
+handleBothPlayerMoves :: Board -> Player -> ([(Int, Int)]) -> Player -> ([(Int, Int)]) -> Board
+
+handleBothPlayerMoves b _ _ _ _= b
+
 --Takes a string from gameLoop, what kind of move to make, and picks the corresponding strategy and returns it's move 
 pickMove :: String -> GameState -> PlayType -> Player -> IO (Maybe[(Int,Int)])
 pickMove strat state playtype player = if strat == "human" 

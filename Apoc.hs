@@ -154,7 +154,19 @@ pawnPromotion :: GameState -> Bool
 pawnPromotion state = if (elem BP (head (theBoard state))) || (elem WP (last (theBoard state)))
                       then True
                       else False
+--Takes a Board, returns a tuple with the location of the first pawn to be promoted (prioritizes Black pawns)
+getPawn :: Board -> (Int,Int)
+getPawn board = if(elem BP (head board))
+		then (findPawn BP (head board), 0)
+		else (findPawn WP (last board), 4)
 
+--Returns the index in a list of the first instance of a piece		
+findPawn :: Cell -> [Cell] -> Int
+findPawn _ [] = -1
+findPawn piece (x:xs) =  if (x == piece)
+						 then 0
+						 else 1 + findPawn piece xs
+					  
 -- Game over conditions
 --One of the players looses all his/her pawns.  The other player is the winner. 
 --One of the players accumulates two penalty points.  The other player is the winner.

@@ -189,13 +189,24 @@ isWinner game = if    not (elem '/' (board2Str (theBoard game)))
                 else Nothing
 
 
+--Checks if there is a clash on the board (the destination of both moves is the same)				
 isClash :: (Int,Int) -> (Int,Int) -> Bool
-
 isClash (x,y) (w,z) = if ((x == w)&&(y == z))
                       then True
                       else False
 
+--Handles the 2 possible clash scenarions
+--Knight and Pawn on the same space = Knight destroys Pawn
+--2 pieces of the same type on the same space = both pieces destroyed
+--Returns the board in the new configuration when done
 
+--Note: This function performs no error checking (assumes that the moves were valid and that there is a clash)
+handleClash :: [(Int, Int)] -> [(Int, Int)] -> Board -> Board
+handleClash (b1:bs) (w1:ws) board | ((getFromBoard board b1) == BK && (getFromBoard board w1) == WP) = 
+									replace2 ( replace2 ( replace2 board (head bs) BK) b1 E) w1 E
+								  | ((getFromBoard board b1) == BP && (getFromBoard board w1) == WK) = 
+									replace2 ( replace2 ( replace2 board (head ws) WK) b1 E) w1 E 
+								  | True =	replace2 ( replace2 board b1 E) w1 E
                       
 ---2D list utility functions-------------------------------------------------------
 

@@ -1,35 +1,3 @@
-{- | This module is used for CPSC 449 for the Apocalypse assignment.
-
-This is merely a skeleton to get you started.  It has VERY little functionality.
-
-Copyright: Copyright 2016, Rob Kremer (rkremer@ucalgary.ca), University of Calgary.
-Permission to use, copy, modify, distribute and sell this software
-and its documentation for any purpose is hereby granted without fee, provided
-that the above copyright notice appear in all copies and that both that
-copyright notice and this permission notice appear in supporting
-documentation. The University of Calgary makes no representations about the
-suitability of this software for any purpose. It is provided "as is" without
-express or implied warranty.
-
--}
-
-module ApocStrategyHuman where
-
-import Control.Monad.Trans.State.Lazy
-import Data.Maybe (fromJust, isNothing)
-import System.IO.Unsafe
-import ApocTools
-import Data.Char
-import Control.Monad
-import System.Exit()
-import System.Environment   
-import Data.List  
-import System.Console.GetOpt
-import Prelude hiding ( catch )
-import Control.Exception
-import Control.Monad ( liftM )
-import System.IO
-
 
 {- | This is just a placeholder for the human strategy: it always chooses to play
      (0,0) to (2,1).
@@ -85,8 +53,10 @@ validMode x
  | otherwise = False
 
 --///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+-}
 
-getGameMode :: IO () -> [String] 
+
+--getGameMode :: IO ()
 getGameMode = do
     putStrLn "Possible strategies: \n\thuman\n\tgreedy\nEnter the strategy for BLACK:"
     blackChoice <-getLine
@@ -100,9 +70,9 @@ getGameMode = do
             putStrLn "  human"
             putStrLn "  greedy"
     putStrLn ">>>"
-    
-    --return list of whiteChoice and blackChoice to main somehow
--}
+    let choices = [blackChoice, whiteChoice]
+    return choices
+
 
 
 

@@ -45,7 +45,7 @@ getMove = do
     input <- getLine --set input to the input the user enters
     return (Just[(digitToInt(input!!0), digitToInt(input!!2)), (digitToInt(input!!4), digitToInt(input!!6))]) --return an array with integers, or nothing
 
-
+{-
 
 getGameMode :: IO ()
 getGameMode = do
@@ -67,7 +67,7 @@ argsNotGiven = do
             putStrLn "  human"
             putStrLn "  greedy"
     putStrLn ">>>"
-    putStrLn "terminate"
+    --return list of whiteChoice and blackChoice to main somehow
 
 
 evalArgList :: [String] -> IO ()
@@ -83,3 +83,27 @@ validMode x
  | x == "human" = True
  | x == "greedy" = True
  | otherwise = False
+
+--///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+getGameMode :: IO () -> [String] 
+getGameMode = do
+    putStrLn "Possible strategies: \n\thuman\n\tgreedy\nEnter the strategy for BLACK:"
+    blackChoice <-getLine
+    when (blackChoice /= "greedy" && blackChoice /= "human") $ do 
+            putStrLn "  human"
+            putStrLn "  greedy"
+            
+    putStrLn "Enter the strategy for WHITE:"
+    whiteChoice <-getLine
+    when (whiteChoice /= "greedy" && whiteChoice /= "human") $ do 
+            putStrLn "  human"
+            putStrLn "  greedy"
+    putStrLn ">>>"
+    
+    --return list of whiteChoice and blackChoice to main somehow
+-}
+
+
+
+

@@ -14,11 +14,12 @@ human b PawnPlacement c = return (Just [(2,2)])
 
 
 
+getMove :: IO (Maybe [(Int,Int)])
 getMove = do
-    putStrLn "Enter the move coordinates for player Black in the form 'srcX srcY destX destY'\n(0 >= n >= 4, or just enter return for a 'pass') B2:" --Prompt the user
-    input <- getLine --set input to the input the user enters
-    return (Just[(digitToInt(input!!0), digitToInt(input!!2)), (digitToInt(input!!4), digitToInt(input!!6))]) --return an array with integers, or nothing
-
+		input <- getLine --set input to the input the user enters
+		if (input == [])
+		then return Nothing
+		else return (Just[(digitToInt(input!!0), digitToInt(input!!2)), (digitToInt(input!!4), digitToInt(input!!6))]) --return an array with integers, or nothing
 {-
 getGameMode :: IO ()
 getGameMode = do

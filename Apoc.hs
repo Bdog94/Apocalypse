@@ -144,7 +144,13 @@ updateState state bMove wMove | (bMove == Nothing) || (wMove == Nothing) = if (b
 									  else GameState (moveType state (fromJust bMove) Black) (blackPen state) Passed (whitePen state) 
 									  (replace2 (replace2 (theBoard state) ((fromJust bMove) !! 1)
                                                    (getFromBoard (theBoard state) ((fromJust bMove) !! 0))) 
-												   ((fromJust bMove) !! 0) E)									  									  
+												   ((fromJust bMove) !! 0) E)
+																				   
+updateState state bMove wMove | not(    isValidMove (theBoard state) (head (fromJust bMove)) (head(tail (fromJust bMove))))
+								|| not( isValidMove	(theBoard state) (head (fromJust wMove)) (head(tail (fromJust wMove))))	
+								=  if	not ( isValidMove (theBoard state) (head (fromJust bMove)) (head(tail (fromJust bMove))))
+								   then GameState (moveType state (fromJust bMove) Black) (blackPen state) (Goofed ( format2Moves wMove )) (whitePen state) []	
+								   else GameState (Goofed (format2Moves bMove)) (blackPen state) (moveType state (fromJust wMove) White) (whitePen state) [] 							  
 updateState state bMove wMove | isValidMove (theBoard state) (head (fromJust bMove)) (head(tail (fromJust bMove)))
 								&& isValidMove (theBoard state) (head (fromJust wMove)) (head(tail (fromJust wMove)))
 										 = GameState  (Played (head (fromJust bMove), head(tail (fromJust bMove))))
@@ -162,6 +168,10 @@ updateState state bMove wMove | isValidMove (theBoard state) (head (fromJust bMo
 												   (getFromBoard (theBoard state) ((fromJust wMove) !! 0)))
 												   ((fromJust wMove) !! 0) E)
 											else (handleClash (fromJust bMove) (fromJust wMove) (theBoard state)))
+											
+format2Moves :: Maybe ([(Int,Int)]) -> ((Int, Int), (Int, Int))
+format2Moves move = (head (fromJust move) , head(tail (fromJust move)))
+
 moveType :: GameState -> ([(Int, Int)]) -> Player -> Played
 
 moveType state list p | length list == 1 = UpgradedPawn2Knight (head list)

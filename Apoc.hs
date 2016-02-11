@@ -134,14 +134,12 @@ updateState :: GameState -> Maybe ([(Int,Int)]) -> Maybe ([(Int,Int)]) -> GameSt
 updateState state Nothing Nothing = GameState Passed (blackPen state) Passed (whitePen state) (theBoard state)
 updateState state bMove wMove | (bMove == Nothing) || (wMove == Nothing) = if (bMove == Nothing)
 									  then GameState Passed (blackPen state) (moveType state (fromJust wMove) White) (whitePen state) (handlePlayerMove (theBoard state) (fromJust wMove) White)
-									  else GameState (moveType state (fromJust bMove) Black) (blackPen state) Passed (whitePen state) (handlePlayerMove (theBoard state) (fromJust bMove) Black)
-updateState state bMove wMove   = GameState (if bMove == Nothing
-										   then Passed
-										   else Played (head (fromJust bMove), head(tail (fromJust bMove))))
+									  else GameState (moveType state (fromJust bMove) Black) (blackPen state) Passed (whitePen state) (handlePlayerMove (theBoard state) (fromJust bMove) Black)									  									  
+updateState state bMove wMove | isValidMove (theBoard state) (head (fromJust bMove)) (head(tail (fromJust bMove)))
+								&& isValidMove (theBoard state) (head (fromJust wMove)) (head(tail (fromJust wMove)))
+										 = GameState  (Played (head (fromJust bMove), head(tail (fromJust bMove))))
 										   (blackPen state)
-										   (if wMove == Nothing
-										   then Passed
-										   else Played (head (fromJust wMove), head(tail (fromJust wMove))))
+										   (Played (head (fromJust wMove), head(tail (fromJust wMove))))
 										   (whitePen state)
 										   (replace2 (
 										   replace2 (

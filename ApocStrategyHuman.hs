@@ -1,3 +1,9 @@
+import Control.Monad
+import Control.Monad.Trans.State.Lazy
+import Data.Maybe (fromJust, isNothing)
+import System.IO.Unsafe
+import ApocTools
+import Data.Char
 
 {- | This is just a placeholder for the human strategy: it always chooses to play
      (0,0) to (2,1).
@@ -56,7 +62,8 @@ validMode x
 -}
 
 
---getGameMode :: IO ()
+
+getGameMode :: IO [String]
 getGameMode = do
     putStrLn "Possible strategies: \n\thuman\n\tgreedy\nEnter the strategy for BLACK:"
     blackChoice <-getLine
@@ -72,6 +79,7 @@ getGameMode = do
     putStrLn ">>>"
     let choices = [blackChoice, whiteChoice]
     return choices
+
 
 
 

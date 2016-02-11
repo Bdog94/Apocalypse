@@ -5,6 +5,7 @@ import Control.Monad.Trans.State.Lazy
 import Data.Maybe (fromJust, isNothing)
 import System.IO.Unsafe
 import ApocTools
+import System.Random
 
 --For quick reference..
 --type Chooser = GameState -> PlayType -> Player -> IO (Maybe [(Int,Int)])
@@ -66,6 +67,21 @@ scoreMove  Black '/' = 1    	--Black is taking out a White Pawn
 scoreMove  White '+' = 1 	--White is taking out a Black Pawn
 scoreMove  Black  c  = 0		 
 scoreMove  White  c  = 0
+
+
+
+rand = do
+    return=<<randomRIO(0, 4 :: Int)
+    
+randomGen :: IO [Int]
+randomGen = do
+    let randArr = [] :: [Int]
+    randOne <- rand
+    randTwo <- rand
+    randThree <- rand
+    randFour <- rand
+    
+    return (randOne : randTwo: randThree: randFour : randArr)
 
 
 

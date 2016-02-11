@@ -109,16 +109,20 @@ main' args = do
 -- If they have, do not continue with another turn
 gameLoop :: GameState -> String -> String -> IO ()
 gameLoop state wStrat bStrat =  if (blackPlay state == Passed) && (whitePlay state == Passed) || not(isWinner state == Nothing)
-                                then do 
-                                        print state--handle win conditions here`
-                                else do 
-                                        print state
-                                
-                                        bMove <- pickMove bStrat state Normal Black    
-                                        wMove <- pickMove wStrat state Normal White
+                                then do print state--handle win conditions here`
+                                else do	
+										print state
+										
+										putStrLn "Enter the move coordinates for player Black in the form 'srcX srcY destX destY'\n(0 >= n >= 4, or just enter return for a 'pass') B2:" --Prompt the user
+										bMove <- pickMove bStrat state Normal Black    
+                                        
+										putStrLn "Enter the move coordinates for player White in the form 'srcX srcY destX destY'\n(0 >= n >= 4, or just enter return for a 'pass') B2:" --Prompt the user
+                                        
+										wMove <- pickMove wStrat state Normal White
                                         --if(bMove == Nothing)||(wMove == Nothing)
-                                        gameLoop state wStrat bStrat
-
+                                        
+										gameLoop (updateState state bMove wMove) wStrat bStrat
+										
 										
 -- Takes the current GameState and the 2 players moves
 -- Returns an updated GameState with moves performed
@@ -133,15 +137,22 @@ gameLoop state wStrat bStrat =  if (blackPlay state == Passed) && (whitePlay sta
 updateState :: GameState -> Maybe ([(Int,Int)]) -> Maybe ([(Int,Int)]) -> GameState
 updateState state Nothing Nothing = GameState Passed (blackPen state) Passed (whitePen state) (theBoard state)
 updateState state bMove wMove | (bMove == Nothing) || (wMove == Nothing) = if (bMove == Nothing)
-									  then GameState Passed (blackPen state) (moveType state (fromJust wMove) White) (whitePen state) (handlePlayerMove (theBoard state) (fromJust wMove) White)
-									  else GameState (moveType state (fromJust bMove) Black) (blackPen state) Passed (whitePen state) (handlePlayerMove (theBoard state) (fromJust bMove) Black)									  									  
+									  then GameState Passed (blackPen state) (moveType state (fromJust wMove) White) (whitePen state) 
+									  (replace2 ( replace2 (theBoard state) ((fromJust wMove) !! 1)
+                                                   (getFromBoard (theBoard state) ((fromJust wMove) !! 0))) 
+												   ((fromJust wMove) !! 0) E)
+									  else GameState (moveType state (fromJust bMove) Black) (blackPen state) Passed (whitePen state) 
+									  (replace2 (replace2 (theBoard state) ((fromJust bMove) !! 1)
+                                                   (getFromBoard (theBoard state) ((fromJust bMove) !! 0))) 
+												   ((fromJust bMove) !! 0) E)									  									  
 updateState state bMove wMove | isValidMove (theBoard state) (head (fromJust bMove)) (head(tail (fromJust bMove)))
 								&& isValidMove (theBoard state) (head (fromJust wMove)) (head(tail (fromJust wMove)))
 										 = GameState  (Played (head (fromJust bMove), head(tail (fromJust bMove))))
 										   (blackPen state)
 										   (Played (head (fromJust wMove), head(tail (fromJust wMove))))
 										   (whitePen state)
-										   (replace2 (
+										   (if not(isClash (head(tail (fromJust bMove))) (head(tail (fromJust wMove))))
+										   then (replace2 (
 										   replace2 (
 										   replace2 (
 										   replace2 (theBoard state) ((fromJust bMove) !! 1)
@@ -150,6 +161,7 @@ updateState state bMove wMove | isValidMove (theBoard state) (head (fromJust bMo
 												   ((fromJust wMove) !! 1) 
 												   (getFromBoard (theBoard state) ((fromJust wMove) !! 0)))
 												   ((fromJust wMove) !! 0) E)
+											else (handleClash (fromJust bMove) (fromJust wMove) (theBoard state)))
 moveType :: GameState -> ([(Int, Int)]) -> Player -> Played
 
 moveType state list p | length list == 1 = UpgradedPawn2Knight (head list)

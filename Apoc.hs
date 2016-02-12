@@ -149,8 +149,12 @@ updateState state bMove wMove | (bMove == Nothing) || (wMove == Nothing) = if (b
 updateState state bMove wMove | not(    isValidMove (theBoard state) (head (fromJust bMove)) (head(tail (fromJust bMove))))
 								|| not( isValidMove	(theBoard state) (head (fromJust wMove)) (head(tail (fromJust wMove))))	
 								=  if	not ( isValidMove (theBoard state) (head (fromJust bMove)) (head(tail (fromJust bMove))))
-								   then GameState (moveType state (fromJust bMove) Black) (blackPen state) (Goofed ( format2Moves wMove )) (whitePen state) []	
-								   else GameState (Goofed (format2Moves bMove)) (blackPen state) (moveType state (fromJust wMove) White) (whitePen state) [] 							  
+								   then GameState (moveType state (fromJust bMove) Black) (blackPen state) (Goofed ( format2Moves wMove )) (whitePen state) 
+								   (handlePlayerMove (theBoard state) (fromJust wMove) White)
+								   	
+								   else GameState (Goofed (format2Moves bMove)) (blackPen state) (moveType state (fromJust wMove) White) (whitePen state) 
+								   (handlePlayerMove (theBoard state) (fromJust bMove) Black)
+								   							  
 updateState state bMove wMove | isValidMove (theBoard state) (head (fromJust bMove)) (head(tail (fromJust bMove)))
 								&& isValidMove (theBoard state) (head (fromJust wMove)) (head(tail (fromJust wMove)))
 										 = GameState  (Played (head (fromJust bMove), head(tail (fromJust bMove))))
@@ -180,7 +184,8 @@ moveType state list p = Played ( (head list), list !! 1)
 
 handlePlayerMove :: Board -> ([(Int, Int)]) -> Player -> Board
 
-handlePlayerMove b _ _ = b
+handlePlayerMove b ((x_s, y_s) : (x_d, y_d) : xs) p | isValidMove b (x_s, y_s)  (x_d, y_d) = 
+					replace2 (replace2 b (x_d, y_d) (getFromBoard b (x_s, y_s))) (x_s, y_s) E
 
 handleBothPlayerMoves :: Board -> Player -> ([(Int, Int)]) -> Player -> ([(Int, Int)]) -> Board
 
@@ -273,16 +278,65 @@ validMovesGenerator theBoard ((x,y):xs) =  if isValidMove theBoard x y
                                        else validMovesGenerator theBoard xs
                                        
 
--- | Generates all possible moves
---generateAllMoves :: () -> [ ((Int, Int), (Int, Int))]
+formatStringForGreedy :: String -> String 
 
--- Note this is code that once it is done will be used to generate every possible move
---generateAllMovesHelper :: Int -> [((Int, Int), (Int, Int))] -> [((Int, Int), (Int, Int))]
---generateAllMovesHelper 0 list = list
---generateAllMovesHelper 1 list = ((0, 0) , (0,0))
---generateAllMovesHelper size list = 
---generateAllMovesHelper size list  | size < 25 = [(5 - 25, 5)
 
+formatStringForGreedy s = filter helperFormatStringForGreedy (removeFront s)
+
+-- Removes " _ _ _ _ _\n" from the String
+removeFront :: String -> String 
+
+removeFront (x:xs) | x == '\n'  && length xs  >= 0= [] ++ xs
+removeFront (x:xs) = removeFront xs 
+
+helperFormatStringForGreedy :: Char -> Bool
+helperFormatStringForGreedy '|' = False
+helperFormatStringForGreedy '\n' = False
+helperFormatStringForGreedy  c = True
+
+
+
+
+generateMovesForGreedyStrat :: Board -> [ ((Int, Int), (Int, Int))] 
+
+generateMovesForGreedyStrat b = generateMovesForGreedyStratString (formatStringForGreedy (board2Str b)) 0
+
+
+generateMovesForGreedyStratString :: String -> Int  -> [((Int, Int) , (Int, Int))]
+
+generateMovesForGreedyStratString [] prevLen = []
+generateMovesForGreedyStratString (c: cs) prevLen |  (prevLen + length(c:cs)) > 29 || (prevLen + length(c:cs)) < 4 = []
+generateMovesForGreedyStratString (c: cs) prevLen |  (prevLen + length(c:cs)) > 4 = 
+				 generateMovesForGreedyStratUsingChar c (0, (prevLen + length(c:cs)) `mod` 5) ++ generateMovesForGreedyStratString cs (prevLen +1)
+generateMovesForGreedyStratString (c: cs) prevLen |  (prevLen + length(c:cs)) > 9 = 
+				 generateMovesForGreedyStratUsingChar c (1, (prevLen + length(c:cs)) `mod` 5) ++ generateMovesForGreedyStratString cs (prevLen +1)
+generateMovesForGreedyStratString (c: cs) prevLen |  (prevLen + length(c:cs)) > 14 = 
+				 generateMovesForGreedyStratUsingChar c (2, (prevLen + length(c:cs)) `mod` 5) ++ generateMovesForGreedyStratString cs (prevLen +1)
+generateMovesForGreedyStratString (c: cs) prevLen |  (prevLen + length(c:cs)) > 19 = 
+				 generateMovesForGreedyStratUsingChar c (3, (prevLen + length(c:cs)) `mod` 5) ++ generateMovesForGreedyStratString cs (prevLen +1)
+generateMovesForGreedyStratString (c: cs) prevLen |  (prevLen + length(c:cs)) > 24 = 
+				 generateMovesForGreedyStratUsingChar c (4, (prevLen + length(c:cs)) `mod` 5) ++ generateMovesForGreedyStratString cs (prevLen +1)
+				 
+generateMovesForGreedyStratUsingChar :: Char -> (Int, Int) -> [ ((Int, Int), (Int, Int))]
+generateMovesForGreedyStratUsingChar c (x,y) | c == 'E' = []
+generateMovesForGreedyStratUsingChar c (x,y) | c == '/' || c == '+' = [ ((x,y), (x, y+1))]++ [ ((x,y), (x -1 , y))] ++ [((x,y), (x+1, y+1))] ++ [((x,y) , (x -1, y +1))] ++
+											[((x,y) , (x, y -1 ))] ++ [((x,y), (x - 1, y))] ++ [((x,y) , (x-1, y -1))] ++ [((x,y), (x +1 , y -1))]
+
+
+
+
+
+generateMovesForGreedyStrat' :: Board -> (Int, Int) -> [ ((Int, Int), (Int, Int))]
+
+generateMovesForGreedyStrat' _ _ = []
+--generateMovesForGreedyStrat' b (x,y) |  (x > 5 || y > 5) || (x < 0 || y < 0) = []
+--generateMovesForGreedyStrat' b (x,y) |  (getFromBoard b (x,y)) == E = []
+--generateMovesForGreedyStrat' b (x,y) |  (getFromBoard b (x,y)) == WP  || getFromBoard b (x,y) == BP
+--									   = [ ((x,y), (x, y+1)),  ((x,y) , (x +1, y)), ((x, y),(x+1,y+1)) , ((x,y), (x -1, y+1)) 
+--									   	   ((x,y), (x, y-1)),  ((x,y) , (x -1, y)), ((x, y),(x-1,y-1)) , ((x,y), (x +1, y -1))]
+									   	   
+
+                                      
                                       
 
 -- | Checks if a move is valid or not on the game board 

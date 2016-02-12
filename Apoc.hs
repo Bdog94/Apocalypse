@@ -110,20 +110,20 @@ main' args = do
 gameLoop :: GameState -> String -> String -> IO ()
 gameLoop state wStrat bStrat =  if (blackPlay state == Passed) && (whitePlay state == Passed) || not(isWinner state == Nothing)
                                 then do print state--handle win conditions here`
-                                else do	
-										print state
-										
-										putStrLn "Enter the move coordinates for player Black in the form 'srcX srcY destX destY'\n(0 >= n >= 4, or just enter return for a 'pass') B2:" --Prompt the user
-										bMove <- pickMove bStrat state Normal Black    
+                                else do    
+                                        print state
                                         
-										putStrLn "Enter the move coordinates for player White in the form 'srcX srcY destX destY'\n(0 >= n >= 4, or just enter return for a 'pass') B2:" --Prompt the user
+                                        putStrLn "Enter the move coordinates for player Black in the form 'srcX srcY destX destY'\n(0 >= n >= 4, or just enter return for a 'pass') B2:" --Prompt the user
+                                        bMove <- pickMove bStrat state Normal Black    
                                         
-										wMove <- pickMove wStrat state Normal White
+                                        putStrLn "Enter the move coordinates for player White in the form 'srcX srcY destX destY'\n(0 >= n >= 4, or just enter return for a 'pass') B2:" --Prompt the user
+                                        
+                                        wMove <- pickMove wStrat state Normal White
                                         --if(bMove == Nothing)||(wMove == Nothing)
                                         
-										gameLoop (updateState state bMove wMove) wStrat bStrat
-										
-										
+                                        gameLoop (updateState state bMove wMove) wStrat bStrat
+                                        
+                                        
 -- Takes the current GameState and the 2 players moves
 -- Returns an updated GameState with moves performed
 
@@ -137,42 +137,42 @@ gameLoop state wStrat bStrat =  if (blackPlay state == Passed) && (whitePlay sta
 updateState :: GameState -> Maybe ([(Int,Int)]) -> Maybe ([(Int,Int)]) -> GameState
 updateState state Nothing Nothing = GameState Passed (blackPen state) Passed (whitePen state) (theBoard state)
 updateState state bMove wMove | (bMove == Nothing) || (wMove == Nothing) = if (bMove == Nothing)
-									  then GameState Passed (blackPen state) (moveType state (fromJust wMove) White) (whitePen state) 
-									  (replace2 ( replace2 (theBoard state) ((fromJust wMove) !! 1)
+                                      then GameState Passed (blackPen state) (moveType state (fromJust wMove) White) (whitePen state) 
+                                      (replace2 ( replace2 (theBoard state) ((fromJust wMove) !! 1)
                                                    (getFromBoard (theBoard state) ((fromJust wMove) !! 0))) 
-												   ((fromJust wMove) !! 0) E)
-									  else GameState (moveType state (fromJust bMove) Black) (blackPen state) Passed (whitePen state) 
-									  (replace2 (replace2 (theBoard state) ((fromJust bMove) !! 1)
+                                                   ((fromJust wMove) !! 0) E)
+                                      else GameState (moveType state (fromJust bMove) Black) (blackPen state) Passed (whitePen state) 
+                                      (replace2 (replace2 (theBoard state) ((fromJust bMove) !! 1)
                                                    (getFromBoard (theBoard state) ((fromJust bMove) !! 0))) 
-												   ((fromJust bMove) !! 0) E)
-																				   
-updateState state bMove wMove | not(    isValidMove (theBoard state) (head (fromJust bMove)) (head(tail (fromJust bMove))))
-								|| not( isValidMove	(theBoard state) (head (fromJust wMove)) (head(tail (fromJust wMove))))	
-								=  if	not ( isValidMove (theBoard state) (head (fromJust bMove)) (head(tail (fromJust bMove))))
-								   then GameState (moveType state (fromJust bMove) Black) (blackPen state) (Goofed ( format2Moves wMove )) (whitePen state) 
-								   (handlePlayerMove (theBoard state) (fromJust wMove) White)
-								   	
-								   else GameState (Goofed (format2Moves bMove)) (blackPen state) (moveType state (fromJust wMove) White) (whitePen state) 
-								   (handlePlayerMove (theBoard state) (fromJust bMove) Black)
-								   							  
-updateState state bMove wMove | isValidMove (theBoard state) (head (fromJust bMove)) (head(tail (fromJust bMove)))
-								&& isValidMove (theBoard state) (head (fromJust wMove)) (head(tail (fromJust wMove)))
-										 = GameState  (Played (head (fromJust bMove), head(tail (fromJust bMove))))
-										   (blackPen state)
-										   (Played (head (fromJust wMove), head(tail (fromJust wMove))))
-										   (whitePen state)
-										   (if not(isClash (head(tail (fromJust bMove))) (head(tail (fromJust wMove))))
-										   then (replace2 (
-										   replace2 (
-										   replace2 (
-										   replace2 (theBoard state) ((fromJust bMove) !! 1)
+                                                   ((fromJust bMove) !! 0) E)
+                                                                                   
+updateState state bMove wMove | not(    isValidForPlayer (theBoard state) Black (fromJust bMove))
+                                || not( isValidForPlayer (theBoard state) White (fromJust wMove))    
+                                =  if    (isValidForPlayer (theBoard state) Black (fromJust bMove))
+                                   then GameState (moveType state (fromJust bMove) Black) (blackPen state) (Goofed ( format2Moves wMove )) ((whitePen state)+1) 
+                                   (handlePlayerMove (theBoard state) (fromJust bMove) Black)
+                                       
+                                   else GameState (Goofed (format2Moves bMove)) ((blackPen state)+1) (moveType state (fromJust wMove) White) (whitePen state) 
+                                   (handlePlayerMove (theBoard state) (fromJust wMove) White)
+                                                                 
+updateState state bMove wMove | isValidForPlayer (theBoard state) Black (fromJust bMove)
+                                && isValidForPlayer (theBoard state) White (fromJust wMove)
+                                         = GameState  (Played (head (fromJust bMove), head(tail (fromJust bMove))))
+                                           (blackPen state)
+                                           (Played (head (fromJust wMove), head(tail (fromJust wMove))))
+                                           (whitePen state)
+                                           (if not(isClash (head(tail (fromJust bMove))) (head(tail (fromJust wMove))))
+                                           then (replace2 (
+                                           replace2 (
+                                           replace2 (
+                                           replace2 (theBoard state) ((fromJust bMove) !! 1)
                                                    (getFromBoard (theBoard state) ((fromJust bMove) !! 0))) 
-												   ((fromJust bMove) !! 0) E)
-												   ((fromJust wMove) !! 1) 
-												   (getFromBoard (theBoard state) ((fromJust wMove) !! 0)))
-												   ((fromJust wMove) !! 0) E)
-											else (handleClash (fromJust bMove) (fromJust wMove) (theBoard state)))
-											
+                                                   ((fromJust bMove) !! 0) E)
+                                                   ((fromJust wMove) !! 1) 
+                                                   (getFromBoard (theBoard state) ((fromJust wMove) !! 0)))
+                                                   ((fromJust wMove) !! 0) E)
+                                            else (handleClash (fromJust bMove) (fromJust wMove) (theBoard state)))
+                                            
 format2Moves :: Maybe ([(Int,Int)]) -> ((Int, Int), (Int, Int))
 format2Moves move = (head (fromJust move) , head(tail (fromJust move)))
 
@@ -185,7 +185,7 @@ moveType state list p = Played ( (head list), list !! 1)
 handlePlayerMove :: Board -> ([(Int, Int)]) -> Player -> Board
 
 handlePlayerMove b ((x_s, y_s) : (x_d, y_d) : xs) p | isValidMove b (x_s, y_s)  (x_d, y_d) = 
-					replace2 (replace2 b (x_d, y_d) (getFromBoard b (x_s, y_s))) (x_s, y_s) E
+                    replace2 (replace2 b (x_d, y_d) (getFromBoard b (x_s, y_s))) (x_s, y_s) E
 
 handleBothPlayerMoves :: Board -> Player -> ([(Int, Int)]) -> Player -> ([(Int, Int)]) -> Board
 
@@ -205,16 +205,16 @@ pawnPromotion state = if (elem BP (head (theBoard state))) || (elem WP (last (th
 --Takes a Board, returns a tuple with the location of the first pawn to be promoted (prioritizes Black pawns)
 getPawn :: Board -> (Int,Int)
 getPawn board = if(elem BP (head board))
-		then (findPawn BP (head board), 0)
-		else (findPawn WP (last board), 4)
+        then (findPawn BP (head board), 0)
+        else (findPawn WP (last board), 4)
 
---Returns the index in a list of the first instance of a piece		
+--Returns the index in a list of the first instance of a piece        
 findPawn :: Cell -> [Cell] -> Int
 findPawn _ [] = -1
 findPawn piece (x:xs) =  if (x == piece)
-						 then 0
-						 else 1 + findPawn piece xs
-					  
+                         then 0
+                         else 1 + findPawn piece xs
+                      
 -- Game over conditions
 --One of the players looses all his/her pawns.  The other player is the winner. 
 --One of the players accumulates two penalty points.  The other player is the winner.
@@ -237,7 +237,7 @@ isWinner game = if    not (elem '/' (board2Str (theBoard game)))
                 else Nothing
 
 
---Checks if there is a clash on the board (the destination of both moves is the same)				
+--Checks if there is a clash on the board (the destination of both moves is the same)                
 isClash :: (Int,Int) -> (Int,Int) -> Bool
 isClash (x,y) (w,z) = if ((x == w)&&(y == z))
                       then True
@@ -251,10 +251,10 @@ isClash (x,y) (w,z) = if ((x == w)&&(y == z))
 --Note: This function performs no error checking (assumes that the moves were valid and that there is a clash)
 handleClash :: [(Int, Int)] -> [(Int, Int)] -> Board -> Board
 handleClash (b1:bs) (w1:ws) board | ((getFromBoard board b1) == BK && (getFromBoard board w1) == WP) = 
-									replace2 ( replace2 ( replace2 board (head bs) BK) b1 E) w1 E
-								  | ((getFromBoard board b1) == BP && (getFromBoard board w1) == WK) = 
-									replace2 ( replace2 ( replace2 board (head ws) WK) b1 E) w1 E 
-								  | True =	replace2 ( replace2 board b1 E) w1 E
+                                    replace2 ( replace2 ( replace2 board (head bs) BK) b1 E) w1 E
+                                  | ((getFromBoard board b1) == BP && (getFromBoard board w1) == WK) = 
+                                    replace2 ( replace2 ( replace2 board (head ws) WK) b1 E) w1 E 
+                                  | True =    replace2 ( replace2 board b1 E) w1 E
                       
 ---2D list utility functions-------------------------------------------------------
 
@@ -307,20 +307,20 @@ generateMovesForGreedyStratString :: String -> Int  -> [((Int, Int) , (Int, Int)
 generateMovesForGreedyStratString [] prevLen = []
 generateMovesForGreedyStratString (c: cs) prevLen |  (prevLen + length(c:cs)) > 29 || (prevLen + length(c:cs)) < 4 = []
 generateMovesForGreedyStratString (c: cs) prevLen |  (prevLen + length(c:cs)) > 4 = 
-				 generateMovesForGreedyStratUsingChar c (0, (prevLen + length(c:cs)) `mod` 5) ++ generateMovesForGreedyStratString cs (prevLen +1)
+                 generateMovesForGreedyStratUsingChar c (0, (prevLen + length(c:cs)) `mod` 5) ++ generateMovesForGreedyStratString cs (prevLen +1)
 generateMovesForGreedyStratString (c: cs) prevLen |  (prevLen + length(c:cs)) > 9 = 
-				 generateMovesForGreedyStratUsingChar c (1, (prevLen + length(c:cs)) `mod` 5) ++ generateMovesForGreedyStratString cs (prevLen +1)
+                 generateMovesForGreedyStratUsingChar c (1, (prevLen + length(c:cs)) `mod` 5) ++ generateMovesForGreedyStratString cs (prevLen +1)
 generateMovesForGreedyStratString (c: cs) prevLen |  (prevLen + length(c:cs)) > 14 = 
-				 generateMovesForGreedyStratUsingChar c (2, (prevLen + length(c:cs)) `mod` 5) ++ generateMovesForGreedyStratString cs (prevLen +1)
+                 generateMovesForGreedyStratUsingChar c (2, (prevLen + length(c:cs)) `mod` 5) ++ generateMovesForGreedyStratString cs (prevLen +1)
 generateMovesForGreedyStratString (c: cs) prevLen |  (prevLen + length(c:cs)) > 19 = 
-				 generateMovesForGreedyStratUsingChar c (3, (prevLen + length(c:cs)) `mod` 5) ++ generateMovesForGreedyStratString cs (prevLen +1)
+                 generateMovesForGreedyStratUsingChar c (3, (prevLen + length(c:cs)) `mod` 5) ++ generateMovesForGreedyStratString cs (prevLen +1)
 generateMovesForGreedyStratString (c: cs) prevLen |  (prevLen + length(c:cs)) > 24 = 
-				 generateMovesForGreedyStratUsingChar c (4, (prevLen + length(c:cs)) `mod` 5) ++ generateMovesForGreedyStratString cs (prevLen +1)
-				 
+                 generateMovesForGreedyStratUsingChar c (4, (prevLen + length(c:cs)) `mod` 5) ++ generateMovesForGreedyStratString cs (prevLen +1)
+                 
 generateMovesForGreedyStratUsingChar :: Char -> (Int, Int) -> [ ((Int, Int), (Int, Int))]
 generateMovesForGreedyStratUsingChar c (x,y) | c == 'E' = []
 generateMovesForGreedyStratUsingChar c (x,y) | c == '/' || c == '+' = [ ((x,y), (x, y+1))]++ [ ((x,y), (x -1 , y))] ++ [((x,y), (x+1, y+1))] ++ [((x,y) , (x -1, y +1))] ++
-											[((x,y) , (x, y -1 ))] ++ [((x,y), (x - 1, y))] ++ [((x,y) , (x-1, y -1))] ++ [((x,y), (x +1 , y -1))]
+                                            [((x,y) , (x, y -1 ))] ++ [((x,y), (x - 1, y))] ++ [((x,y) , (x-1, y -1))] ++ [((x,y), (x +1 , y -1))]
 
 
 
@@ -332,11 +332,15 @@ generateMovesForGreedyStrat' _ _ = []
 --generateMovesForGreedyStrat' b (x,y) |  (x > 5 || y > 5) || (x < 0 || y < 0) = []
 --generateMovesForGreedyStrat' b (x,y) |  (getFromBoard b (x,y)) == E = []
 --generateMovesForGreedyStrat' b (x,y) |  (getFromBoard b (x,y)) == WP  || getFromBoard b (x,y) == BP
---									   = [ ((x,y), (x, y+1)),  ((x,y) , (x +1, y)), ((x, y),(x+1,y+1)) , ((x,y), (x -1, y+1)) 
---									   	   ((x,y), (x, y-1)),  ((x,y) , (x -1, y)), ((x, y),(x-1,y-1)) , ((x,y), (x +1, y -1))]
-									   	   
+--                                       = [ ((x,y), (x, y+1)),  ((x,y) , (x +1, y)), ((x, y),(x+1,y+1)) , ((x,y), (x -1, y+1)) 
+--                                              ((x,y), (x, y-1)),  ((x,y) , (x -1, y)), ((x, y),(x-1,y-1)) , ((x,y), (x +1, y -1))]
+                                              
 
-                                      
+isValidForPlayer :: Board -> Player -> [(Int,Int)] -> Bool
+isValidForPlayer board player [] = False
+isValidForPlayer board player (first:rest) =  if (((getFromBoard board first) == E) || (player == playerOf (pieceOf(getFromBoard board first))))  
+                                              then isValidMove board first (head rest)
+                                              else False
                                       
 
 -- | Checks if a move is valid or not on the game board 

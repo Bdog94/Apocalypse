@@ -17,7 +17,6 @@ human b PawnPlacement c = return (Just [(2,2)])
 
 
 getMove = do
-    putStrLn "Enter the move coordinates for player Black in the form 'srcX srcY destX destY'\n(0 >= n >= 4, or just enter return for a 'pass') B2:" --Prompt the user
     theMove <- getLine --set input to the input the user enters
     let input = filter(/=' ') theMove
     if input == [] then do return Nothing 

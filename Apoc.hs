@@ -109,20 +109,27 @@ main' args = do
 -- If they have, do not continue with another turn
 gameLoop :: GameState -> String -> String -> IO ()
 gameLoop state wStrat bStrat | (blackPlay state == Passed) && (whitePlay state == Passed) 
-								|| not(isWinner state == Nothing) = do print state
-gameLoop state wStrat bStrat | ((pawn2Upgrade state) == True) = do print state
-gameLoop state wStrat bStrat | True = do 
-										print state
+                                || not(isWinner state == Nothing) = do print state
+gameLoop state wStrat bStrat | ((pawn2Upgrade state) == True) && 
+                               (((countPiece (flatten (theBoard state)) BK) 
+							    + (countPiece (flatten (theBoard state)) WK) )< 4) = 
+								do 
+									print state
+																						
+									(gameLoop (handlePromotion state (getPawnPlayer (theBoard state) (getPawn(theBoard state)))) wStrat bStrat)
+gameLoop state wStrat bStrat | ((pawn2Upgrade state) == True) = do print state                                                                  
+gameLoop state wStrat bStrat | True = do  
+                                        print state
                                         
-										putStrLn "Enter the move coordinates for player Black in the form 'srcX srcY destX destY'\n(0 >= n >= 4, or just enter return for a 'pass') B2:" --Prompt the user
-										bMove <- pickMove bStrat state Normal Black    
+                                        putStrLn "Enter the move coordinates for player Black in the form 'srcX srcY destX destY'\n(0 >= n >= 4, or just enter return for a 'pass') B1:" --Prompt the user
+                                        bMove <- pickMove bStrat state Normal Black    
                                         
-										putStrLn "Enter the move coordinates for player White in the form 'srcX srcY destX destY'\n(0 >= n >= 4, or just enter return for a 'pass') B2:" --Prompt the user
+                                        putStrLn "Enter the move coordinates for player White in the form 'srcX srcY destX destY'\n(0 >= n >= 4, or just enter return for a 'pass') W1:" --Prompt the user
                                        
-										wMove <- pickMove wStrat state Normal White
+                                        wMove <- pickMove wStrat state Normal White
                                         --if(bMove == Nothing)||(wMove == Nothing)
-											
-										gameLoop (updateState state bMove wMove) wStrat bStrat
+                                            
+                                        gameLoop (updateState state bMove wMove) wStrat bStrat
                                         
                                         
 -- Takes the current GameState and the 2 players moves
@@ -173,17 +180,20 @@ moveType state list p = Played ( (head list), list !! 1)
 
 handlePlayerMove :: Board -> ([(Int, Int)]) -> Player -> Board
 
-handlePlayerMove b ((x_s, y_s) : (x_d, y_d) : xs) p | isValidMove b (x_s, y_s)  (x_d, y_d) = 
+handlePlayerMove b ((x_s, y_s) : (x_d, y_d) : xs) p = 
                     replace2 (replace2 b (x_d, y_d) (getFromBoard b (x_s, y_s))) (x_s, y_s) E
 
 handleBothPlayerMoves :: Board -> Player -> ([(Int, Int)]) -> Player -> ([(Int, Int)]) -> Board
-handleBothPlayerMoves board black bMove white wMove =  handlePlayerMove (handlePlayerMove board bMove black) wMove white
+handleBothPlayerMoves board black bMove white wMove | (head wMove) == (last bMove) =  handlePlayerMove (handlePlayerMove board wMove white) bMove black
+handleBothPlayerMoves board black bMove white wMove | (head bMove) == (last wMove) =  handlePlayerMove (handlePlayerMove board bMove black) wMove white
+handleBothPlayerMoves board black bMove white wMove | True =  handlePlayerMove (handlePlayerMove board bMove black) wMove white
+
 
 --Takes a string from gameLoop, what kind of move to make, and picks the corresponding strategy and returns it's move 
 pickMove :: String -> GameState -> PlayType -> Player -> IO (Maybe[(Int,Int)])
-pickMove strat state playtype player = if strat == "human" 
-                        then human state playtype player 
-                        else return Nothing
+pickMove strat state playtype player | strat == "human" = human state playtype player 
+--pickMove strat state playtype player | strat == "greedy" = greedy state playtype player 
+pickMove strat state playtype player | True = return Nothing
 
 
 -- Game over conditions
@@ -237,14 +247,15 @@ getPawn board = if(elem BP (head board))
         then (findPawn BP (head board), 0)
         else (findPawn WP (last board), 4)
 
-
+getPawnPlayer :: Board -> (Int,Int) -> Player
+getPawnPlayer board coord = playerOf (pieceOf (getFromBoard board coord))
 --Returns the index in a list of the first instance of a piece        
 findPawn :: Cell -> [Cell] -> Int
 findPawn _ [] = -5
 findPawn piece (x:xs) =  if (x == piece)
                          then 0
                          else 1 + findPawn piece xs
-                      			  
+                                    
 flatten :: [[a]] -> [a]
 flatten [] = []
 flatten (x:xs) = x ++ (flatten xs)
@@ -254,9 +265,18 @@ countPiece [] target = 0
 countPiece (x:xs) target | x == target = 1 + (countPiece xs target)
                          | True = countPiece xs target
                                   
-handlePromotion :: GameState -> GameState
-handlePromotion state = state
-								  
+handlePromotion :: GameState -> Player -> GameState
+handlePromotion state player | player == Black = GameState (UpgradedPawn2Knight(getPawn (theBoard state)))
+															(blackPen state)
+															None
+															(whitePen state)
+															(replace2 (theBoard state) (getPawn (theBoard state)) BK)
+handlePromotion state player | player == White = GameState None
+															(blackPen state)
+															(UpgradedPawn2Knight(getPawn (theBoard state)))
+															(whitePen state)
+															(replace2 (theBoard state) (getPawn (theBoard state)) WK)
+                                  
 ---2D list utility functions-------------------------------------------------------
 
 -- | Replaces the nth element in a row with a new element.

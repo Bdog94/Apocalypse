@@ -138,13 +138,9 @@ updateState :: GameState -> Maybe ([(Int,Int)]) -> Maybe ([(Int,Int)]) -> GameSt
 updateState state Nothing Nothing = GameState Passed (blackPen state) Passed (whitePen state) (theBoard state)
 updateState state bMove wMove | (bMove == Nothing) || (wMove == Nothing) = if (bMove == Nothing)
                                       then GameState Passed (blackPen state) (moveType state (fromJust wMove) White) (whitePen state) 
-                                      (replace2 ( replace2 (theBoard state) ((fromJust wMove) !! 1)
-                                                   (getFromBoard (theBoard state) ((fromJust wMove) !! 0))) 
-                                                   ((fromJust wMove) !! 0) E)
+                                      (handlePlayerMove (theBoard state) (fromJust wMove) White)
                                       else GameState (moveType state (fromJust bMove) Black) (blackPen state) Passed (whitePen state) 
-                                      (replace2 (replace2 (theBoard state) ((fromJust bMove) !! 1)
-                                                   (getFromBoard (theBoard state) ((fromJust bMove) !! 0))) 
-                                                   ((fromJust bMove) !! 0) E)
+                                      (handlePlayerMove (theBoard state) (fromJust bMove) Black)
                                                                                    
 updateState state bMove wMove | not(    isValidForPlayer (theBoard state) Black (fromJust bMove))
                                 || not( isValidForPlayer (theBoard state) White (fromJust wMove))    
@@ -162,15 +158,7 @@ updateState state bMove wMove | isValidForPlayer (theBoard state) Black (fromJus
                                            (Played (head (fromJust wMove), head(tail (fromJust wMove))))
                                            (whitePen state)
                                            (if not(isClash (head(tail (fromJust bMove))) (head(tail (fromJust wMove))))
-                                           then (replace2 (
-                                           replace2 (
-                                           replace2 (
-                                           replace2 (theBoard state) ((fromJust bMove) !! 1)
-                                                   (getFromBoard (theBoard state) ((fromJust bMove) !! 0))) 
-                                                   ((fromJust bMove) !! 0) E)
-                                                   ((fromJust wMove) !! 1) 
-                                                   (getFromBoard (theBoard state) ((fromJust wMove) !! 0)))
-                                                   ((fromJust wMove) !! 0) E)
+                                           then (handleBothPlayerMoves (theBoard state) Black (fromJust bMove) White (fromJust wMove))
                                             else (handleClash (fromJust bMove) (fromJust wMove) (theBoard state)))
                                             
 format2Moves :: Maybe ([(Int,Int)]) -> ((Int, Int), (Int, Int))
@@ -188,8 +176,7 @@ handlePlayerMove b ((x_s, y_s) : (x_d, y_d) : xs) p | isValidMove b (x_s, y_s)  
                     replace2 (replace2 b (x_d, y_d) (getFromBoard b (x_s, y_s))) (x_s, y_s) E
 
 handleBothPlayerMoves :: Board -> Player -> ([(Int, Int)]) -> Player -> ([(Int, Int)]) -> Board
-
-handleBothPlayerMoves b _ _ _ _= b
+handleBothPlayerMoves board black bMove white wMove =  handlePlayerMove (handlePlayerMove board bMove black) wMove white
 
 --Takes a string from gameLoop, what kind of move to make, and picks the corresponding strategy and returns it's move 
 pickMove :: String -> GameState -> PlayType -> Player -> IO (Maybe[(Int,Int)])

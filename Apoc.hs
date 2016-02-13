@@ -22,6 +22,7 @@ import System.Environment
 import System.IO.Unsafe
 import ApocTools
 import ApocStrategyHuman
+--import ApocStrategyGreedy
 
 --TestCode 
 gameOverBoard1       :: GameState
@@ -112,11 +113,11 @@ gameLoop state wStrat bStrat | (blackPlay state == Passed) && (whitePlay state =
                                 || not(isWinner state == Nothing) = do print state
 gameLoop state wStrat bStrat | ((pawn2Upgrade state) == True) && 
                                (((countPiece (flatten (theBoard state)) BK) 
-							    + (countPiece (flatten (theBoard state)) WK) )< 4) = 
-								do 
-									print state
-																						
-									(gameLoop (handlePromotion state (getPawnPlayer (theBoard state) (getPawn(theBoard state)))) wStrat bStrat)
+                                + (countPiece (flatten (theBoard state)) WK) )< 4) = 
+                                do 
+                                    print state
+                                                                                        
+                                    (gameLoop (handlePromotion state (getPawnPlayer (theBoard state) (getPawn(theBoard state)))) wStrat bStrat)
 gameLoop state wStrat bStrat | ((pawn2Upgrade state) == True) = do print state                                                                  
 gameLoop state wStrat bStrat | True = do  
                                         print state
@@ -149,14 +150,17 @@ updateState state bMove wMove | (bMove == Nothing) || (wMove == Nothing) = if (b
                                       (handlePlayerMove (theBoard state) (fromJust wMove) White)
                                       else GameState (moveType state (fromJust bMove) Black) (blackPen state) Passed (whitePen state) 
                                       (handlePlayerMove (theBoard state) (fromJust bMove) Black)
-                                                                                   
+updateState state bMove wMove | not(    isValidForPlayer (theBoard state) Black (fromJust bMove))
+                                && not( isValidForPlayer (theBoard state) White (fromJust wMove))    
+                                =  GameState (Goofed (format2Moves (fromJust bMove))) ((blackPen state)+1) (Goofed ( format2Moves (fromJust wMove) )) ((whitePen state)+1) (theBoard state)
+                                                                       
 updateState state bMove wMove | not(    isValidForPlayer (theBoard state) Black (fromJust bMove))
                                 || not( isValidForPlayer (theBoard state) White (fromJust wMove))    
                                 =  if    (isValidForPlayer (theBoard state) Black (fromJust bMove))
-                                   then GameState (moveType state (fromJust bMove) Black) (blackPen state) (Goofed ( format2Moves wMove )) ((whitePen state)+1) 
+                                   then GameState (moveType state (fromJust bMove) Black) (blackPen state) (Goofed ( format2Moves (fromJust wMove) )) ((whitePen state)+1) 
                                    (handlePlayerMove (theBoard state) (fromJust bMove) Black)
                                        
-                                   else GameState (Goofed (format2Moves bMove)) ((blackPen state)+1) (moveType state (fromJust wMove) White) (whitePen state) 
+                                   else GameState (Goofed (format2Moves (fromJust bMove))) ((blackPen state)+1) (moveType state (fromJust wMove) White) (whitePen state) 
                                    (handlePlayerMove (theBoard state) (fromJust wMove) White)
                                                                  
 updateState state bMove wMove | isValidForPlayer (theBoard state) Black (fromJust bMove)
@@ -169,8 +173,8 @@ updateState state bMove wMove | isValidForPlayer (theBoard state) Black (fromJus
                                            then (handleBothPlayerMoves (theBoard state) Black (fromJust bMove) White (fromJust wMove))
                                             else (handleClash (fromJust bMove) (fromJust wMove) (theBoard state)))
                                             
-format2Moves :: Maybe ([(Int,Int)]) -> ((Int, Int), (Int, Int))
-format2Moves move = (head (fromJust move) , head(tail (fromJust move)))
+format2Moves :: [(Int,Int)] -> ((Int, Int), (Int, Int))
+format2Moves move = (head move , head(tail move))
 
 moveType :: GameState -> ([(Int, Int)]) -> Player -> Played
 
@@ -267,16 +271,44 @@ countPiece (x:xs) target | x == target = 1 + (countPiece xs target)
                                   
 handlePromotion :: GameState -> Player -> GameState
 handlePromotion state player | player == Black = GameState (UpgradedPawn2Knight(getPawn (theBoard state)))
-															(blackPen state)
-															None
-															(whitePen state)
-															(replace2 (theBoard state) (getPawn (theBoard state)) BK)
+                                                            (blackPen state)
+                                                            None
+                                                            (whitePen state)
+                                                            (replace2 (theBoard state) (getPawn (theBoard state)) BK)
 handlePromotion state player | player == White = GameState None
-															(blackPen state)
-															(UpgradedPawn2Knight(getPawn (theBoard state)))
-															(whitePen state)
-															(replace2 (theBoard state) (getPawn (theBoard state)) WK)
-                                  
+                                                            (blackPen state)
+                                                            (UpgradedPawn2Knight(getPawn (theBoard state)))
+                                                            (whitePen state)
+                                                            (replace2 (theBoard state) (getPawn (theBoard state)) WK)
+
+handlePlacement :: GameState -> (Int,Int) -> Player -> GameState
+handlePlacement state coord player | player == Black && ((getFromBoard (theBoard state) coord) == E)= 
+                                   GameState (PlacedPawn((getPawn (theBoard state)),coord)) 
+                                   (blackPen state) 
+                                   None 
+                                   (whitePen state) 
+                                   (handlePlayerMove (theBoard state) [getPawn(theBoard state),coord] Black) 
+
+                                   | player == Black = 
+                                   GameState (BadPlacedPawn((getPawn (theBoard state)),coord)) 
+                                   (blackPen state + 1) 
+                                   None 
+                                   (whitePen state) 
+                                   (theBoard state)
+
+                                   | player == White && ((getFromBoard (theBoard state) coord) == E)= 
+                                   GameState None 
+                                   (blackPen state) 
+                                   (PlacedPawn((getPawn (theBoard state)),coord)) 
+                                   (whitePen state) 
+                                   (handlePlayerMove (theBoard state) [getPawn(theBoard state),coord] White) 
+
+                                   | player == White = GameState None 
+                                   (blackPen state) 
+                                   (BadPlacedPawn((getPawn (theBoard state)),coord)) 
+                                   (whitePen state + 1) 
+                                   (theBoard state)
+
 ---2D list utility functions-------------------------------------------------------
 
 -- | Replaces the nth element in a row with a new element.
@@ -367,6 +399,7 @@ isValidForPlayer board player (first:rest) =  if (((getFromBoard board first) ==
 -- | Checks if a move is valid or not on the game board 
 isValidMove :: Board -> (Int,Int) -> (Int,Int) -> Bool
 isValidMove theBoard (x,y) (w,z)
+    | (x<0) || (x>4)|| (y<0) || (y>4) || (w<0) || (w>4) || (z<0) || (z>4) = False
     |((getFromBoard theBoard (x,y)) == WK ) =               -- | A knights move is valid if it:
         if (((abs (x-w))<3) && ((abs (y-z)))<3)             -- | moves 2 spaces on one axis, and one space on the other 
            && (((abs (x-w)) + (abs (y-z))) == 3)            -- | (totaling 3 spaces)

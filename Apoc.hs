@@ -55,7 +55,7 @@ testWhiteWin = if (isWinner gameOverBoard2 == Just(White))
 
 
 promoBoard2       :: GameState
-promoBoard2      = GameState Passed 0 Passed 0
+promoBoard2      = GameState Init 0 Init 0
                           [ [WK, WP, E, E, WK],
                           [E, E , E , E , E],
                           [E ,WP , E , E , E ],
@@ -63,7 +63,7 @@ promoBoard2      = GameState Passed 0 Passed 0
                           [BK, E, E,  WP , BK] ]
                           
 promoBoard1       :: GameState
-promoBoard1 = GameState Passed 0 Passed 0
+promoBoard1 = GameState Init 0 Init 0
                           [ [WK, BP, E, E, WK],
                           [E, E , E , E , E],
                           [E ,WP , E , E , E ],
@@ -118,19 +118,34 @@ gameLoop state wStrat bStrat | ((pawn2Upgrade state) == True) &&
                                     print state
                                                                                         
                                     (gameLoop (handlePromotion state (getPawnPlayer (theBoard state) (getPawn(theBoard state)))) wStrat bStrat)
-gameLoop state wStrat bStrat | ((pawn2Upgrade state) == True) = do print state                                                                  
+gameLoop state wStrat bStrat | ((pawn2Upgrade state) == True) && (getPawnPlayer (theBoard state) (getPawn(theBoard state)) == Black)
+                                       = do 
+                                                print state
+                                                putStrLn(if(bStrat == "human")
+                                                then "Enter the coordinates to place the pawn for player Black in the form 'destX destY'\n(0 >= n >= 4, or just enter return for a 'pass') B2:"
+                                                else "")
+                                                move <- pickMove bStrat state PawnPlacement Black
+                                                (gameLoop (handlePlacement state move Black) wStrat bStrat)
+gameLoop state wStrat bStrat | ((pawn2Upgrade state) == True) && (getPawnPlayer (theBoard state) (getPawn(theBoard state)) == White)
+                                       = do 
+                                                print state
+                                                putStrLn(if(wStrat == "human")
+                                                then "Enter the coordinates to place the pawn for player White in the form 'destX destY'\n(0 >= n >= 4, or just enter return for a 'pass') W2:"
+                                                else "")
+                                                move <- pickMove wStrat state PawnPlacement White
+                                                (gameLoop (handlePlacement state move White) wStrat bStrat)
 gameLoop state wStrat bStrat | True = do  
-                                        print state
+                                            print state
                                         
-                                        putStrLn "Enter the move coordinates for player Black in the form 'srcX srcY destX destY'\n(0 >= n >= 4, or just enter return for a 'pass') B1:" --Prompt the user
-                                        bMove <- pickMove bStrat state Normal Black    
-                                        
-                                        putStrLn "Enter the move coordinates for player White in the form 'srcX srcY destX destY'\n(0 >= n >= 4, or just enter return for a 'pass') W1:" --Prompt the user
-                                       
-                                        wMove <- pickMove wStrat state Normal White
-                                        --if(bMove == Nothing)||(wMove == Nothing)
-                                            
-                                        gameLoop (updateState state bMove wMove) wStrat bStrat
+                                            putStrLn (if(bStrat == "human")
+                                            then "Enter the move coordinates for player Black in the form 'srcX srcY destX destY'\n(0 >= n >= 4, or just enter return for a 'pass') B1:"
+                                            else "")
+                                            bMove <- pickMove bStrat state Normal Black    
+                                            putStrLn (if(wStrat == "human")
+                                            then "Enter the move coordinates for player White in the form 'srcX srcY destX destY'\n(0 >= n >= 4, or just enter return for a 'pass') W1:"
+                                            else "")
+                                            wMove <- pickMove wStrat state Normal White
+                                            gameLoop (updateState state bMove wMove) wStrat bStrat
                                         
                                         
 -- Takes the current GameState and the 2 players moves
@@ -281,31 +296,45 @@ handlePromotion state player | player == White = GameState None
                                                             (whitePen state)
                                                             (replace2 (theBoard state) (getPawn (theBoard state)) WK)
 
-handlePlacement :: GameState -> (Int,Int) -> Player -> GameState
-handlePlacement state coord player | player == Black && ((getFromBoard (theBoard state) coord) == E)= 
-                                   GameState (PlacedPawn((getPawn (theBoard state)),coord)) 
+handlePlacement :: GameState -> Maybe[(Int,Int)] -> Player -> GameState
+handlePlacement state move player | move == Nothing && player == Black =
+								   GameState NullPlacedPawn 
                                    (blackPen state) 
                                    None 
                                    (whitePen state) 
-                                   (handlePlayerMove (theBoard state) [getPawn(theBoard state),coord] Black) 
+                                   (theBoard state) 
+
+								   | move == Nothing && player == White =
+								   GameState None
+                                   (blackPen state) 
+                                   NullPlacedPawn
+                                   (whitePen state) 
+                                   (theBoard state) 
+
+								   | player == Black && ((getFromBoard (theBoard state) (head (fromJust move))) == E) = 
+                                   GameState (PlacedPawn((getPawn (theBoard state)),(head (fromJust move)))) 
+                                   (blackPen state) 
+                                   None 
+                                   (whitePen state) 
+                                   (handlePlayerMove (theBoard state) [getPawn(theBoard state),(head (fromJust move))] Black) 
 
                                    | player == Black = 
-                                   GameState (BadPlacedPawn((getPawn (theBoard state)),coord)) 
+                                   GameState (BadPlacedPawn((getPawn (theBoard state)),(head (fromJust move)))) 
                                    (blackPen state + 1) 
                                    None 
                                    (whitePen state) 
                                    (theBoard state)
 
-                                   | player == White && ((getFromBoard (theBoard state) coord) == E)= 
+                                   | player == White && ((getFromBoard (theBoard state) (head (fromJust move))) == E)= 
                                    GameState None 
                                    (blackPen state) 
-                                   (PlacedPawn((getPawn (theBoard state)),coord)) 
+                                   (PlacedPawn((getPawn (theBoard state)),(head (fromJust move)))) 
                                    (whitePen state) 
-                                   (handlePlayerMove (theBoard state) [getPawn(theBoard state),coord] White) 
+                                   (handlePlayerMove (theBoard state) [getPawn(theBoard state),(head (fromJust move))] White) 
 
                                    | player == White = GameState None 
                                    (blackPen state) 
-                                   (BadPlacedPawn((getPawn (theBoard state)),coord)) 
+                                   (BadPlacedPawn((getPawn (theBoard state)),(head (fromJust move)))) 
                                    (whitePen state + 1) 
                                    (theBoard state)
 

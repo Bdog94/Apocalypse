@@ -12,7 +12,7 @@ import Data.Char
 -}
 human    :: Chooser
 human b Normal        c = getMove
-human b PawnPlacement c = return (Just [(2,2)])
+human b PawnPlacement c = getPlacement
 
 
 
@@ -22,6 +22,13 @@ getMove = do
     if input == [] then do return Nothing 
     else return (Just[(digitToInt(input!!0), digitToInt(input!!1)), (digitToInt(input!!2), digitToInt(input!!3))])
    
+getPlacement = do
+    theMove <- getLine --set input to the input the user enters
+    let input = filter(/=' ') theMove
+    if input == [] then do return Nothing 
+    else return (Just[(digitToInt(input!!0), digitToInt(input!!1))])
+   
+
 
 
 {-

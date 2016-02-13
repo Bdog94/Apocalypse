@@ -202,12 +202,12 @@ findPawn piece (x:xs) =  if (x == piece)
                          then 0
                          else 1 + findPawn piece xs
                       
+                      
+                      
 -- Game over conditions
 --One of the players looses all his/her pawns.  The other player is the winner. 
 --One of the players accumulates two penalty points.  The other player is the winner.
 --Both players pass on the same round. The one with the most pawns wins.
-
-
 -- | This method will return the winner or return Nothing.
 -- | Note it is not compatible with testing whether or not both players pass on the same round
 -- that functionality is easier to do in the gameLoop I believe
@@ -242,7 +242,16 @@ handleClash (b1:bs) (w1:ws) board | ((getFromBoard board b1) == BK && (getFromBo
                                   | ((getFromBoard board b1) == BP && (getFromBoard board w1) == WK) = 
                                     replace2 ( replace2 ( replace2 board (head ws) WK) b1 E) w1 E 
                                   | True =    replace2 ( replace2 board b1 E) w1 E
-                      
+
+flatten :: [[a]] -> [a]
+flatten [] = []
+flatten (x:xs) = x ++ (flatten xs)
+
+countPiece :: [Cell] -> Cell -> Int
+countPiece [] target = 0
+countPiece (x:xs) target | x == target = 1 + (countPiece xs target)
+                         | True = countPiece xs target
+                                  
 ---2D list utility functions-------------------------------------------------------
 
 -- | Replaces the nth element in a row with a new element.
@@ -322,7 +331,7 @@ generateMovesForGreedyStrat' _ _ = []
 --                                       = [ ((x,y), (x, y+1)),  ((x,y) , (x +1, y)), ((x, y),(x+1,y+1)) , ((x,y), (x -1, y+1)) 
 --                                              ((x,y), (x, y-1)),  ((x,y) , (x -1, y)), ((x, y),(x-1,y-1)) , ((x,y), (x +1, y -1))]
                                               
-
+--Additional check to ensure a player can only move their own piece
 isValidForPlayer :: Board -> Player -> [(Int,Int)] -> Bool
 isValidForPlayer board player [] = False
 isValidForPlayer board player (first:rest) =  if (((getFromBoard board first) == E) || (player == playerOf (pieceOf(getFromBoard board first))))  

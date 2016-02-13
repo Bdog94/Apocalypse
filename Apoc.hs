@@ -22,6 +22,7 @@ import System.Environment
 import System.IO.Unsafe
 import ApocTools
 import ApocStrategyHuman
+import Data.Char
 --import ApocStrategyGreedy
 
 --TestCode 
@@ -86,31 +87,15 @@ main = main' (unsafePerformIO getArgs)
      2. run from the command line by calling this function with the value from (getArgs)
 -}
 main'           :: [String] -> IO()
-main' args = do
-    putStrLn "\nThe initial board:"
-    print initBoard
+main' args | args == [] = do 
 
-    putStrLn $ "\nThe initial board with back human (the placeholder for human) strategy having played one move\n"
-               ++ "(clearly illegal as we must play in rounds!):"
-    move <- human (initBoard) Normal Black
-    putStrLn (show $ GameState (if move==Nothing
-                                then Passed
-                                else Played (head (fromJust move), head (tail (fromJust move))))
-                               (blackPen initBoard)
-                               (Passed)
-                               (whitePen initBoard)
-                               (replace2 (replace2 (theBoard initBoard)
-                                                   ((fromJust move) !! 1)
-                                                   (getFromBoard (theBoard initBoard) ((fromJust move) !! 0)))
-                                         ((fromJust move) !! 0)
-                                         E))
 
    
 -- If there is a winner on the board, or if both players have passed there turns. 
 -- If they have, do not continue with another turn
 gameLoop :: GameState -> String -> String -> IO ()
 gameLoop state wStrat bStrat | (blackPlay state == Passed) && (whitePlay state == Passed) 
-                                || not(isWinner state == Nothing) = do print state
+                                || not(isWinner state == Nothing) =  do putStrLn ((board2Str (theBoard state)) ++ ['\n'] ++ (getWinnerString state wStrat bStrat))
 gameLoop state wStrat bStrat | ((pawn2Upgrade state) == True) && 
                                (((countPiece (flatten (theBoard state)) BK) 
                                 + (countPiece (flatten (theBoard state)) WK) )< 4) = 
@@ -121,28 +106,28 @@ gameLoop state wStrat bStrat | ((pawn2Upgrade state) == True) &&
 gameLoop state wStrat bStrat | ((pawn2Upgrade state) == True) && (getPawnPlayer (theBoard state) (getPawn(theBoard state)) == Black)
                                        = do 
                                                 print state
-                                                putStrLn(if(bStrat == "human")
-                                                then "Enter the coordinates to place the pawn for player Black in the form 'destX destY'\n(0 >= n >= 4, or just enter return for a 'pass') B2:"
+                                                putStr(if(bStrat == "human")
+                                                then "Enter the coordinates to place the pawn for player Black in the form 'destX destY'\n(0 >= n >= 4, or just enter return for a 'pass') B2:\n"
                                                 else "")
                                                 move <- pickMove bStrat state PawnPlacement Black
                                                 (gameLoop (handlePlacement state move Black) wStrat bStrat)
 gameLoop state wStrat bStrat | ((pawn2Upgrade state) == True) && (getPawnPlayer (theBoard state) (getPawn(theBoard state)) == White)
                                        = do 
                                                 print state
-                                                putStrLn(if(wStrat == "human")
-                                                then "Enter the coordinates to place the pawn for player White in the form 'destX destY'\n(0 >= n >= 4, or just enter return for a 'pass') W2:"
+                                                putStr(if(wStrat == "human")
+                                                then "Enter the coordinates to place the pawn for player White in the form 'destX destY'\n(0 >= n >= 4, or just enter return for a 'pass') W2:\n"
                                                 else "")
                                                 move <- pickMove wStrat state PawnPlacement White
                                                 (gameLoop (handlePlacement state move White) wStrat bStrat)
 gameLoop state wStrat bStrat | True = do  
                                             print state
                                         
-                                            putStrLn (if(bStrat == "human")
-                                            then "Enter the move coordinates for player Black in the form 'srcX srcY destX destY'\n(0 >= n >= 4, or just enter return for a 'pass') B1:"
+                                            putStr (if(bStrat == "human")
+                                            then "Enter the move coordinates for player Black in the form 'srcX srcY destX destY'\n(0 >= n >= 4, or just enter return for a 'pass') B1:\n"
                                             else "")
                                             bMove <- pickMove bStrat state Normal Black    
-                                            putStrLn (if(wStrat == "human")
-                                            then "Enter the move coordinates for player White in the form 'srcX srcY destX destY'\n(0 >= n >= 4, or just enter return for a 'pass') W1:"
+                                            putStr (if(wStrat == "human")
+                                            then "Enter the move coordinates for player White in the form 'srcX srcY destX destY'\n(0 >= n >= 4, or just enter return for a 'pass') W1:\n"
                                             else "")
                                             wMove <- pickMove wStrat state Normal White
                                             gameLoop (updateState state bMove wMove) wStrat bStrat
@@ -233,6 +218,16 @@ isWinner game = if    not (elem '/' (board2Str (theBoard game)))
                       then Just(White)
                       else Just(Black))
                 else Nothing
+				
+getWinnerString :: GameState -> String -> String -> String
+getWinnerString state wStrat bStrat| countPiece (flatten (theBoard state)) BP == countPiece (flatten (theBoard state)) WP 
+	=	"The game was a Draw."
+getWinnerString state wStrat bStrat| countPiece (flatten (theBoard state)) BP > countPiece (flatten (theBoard state)) WP 
+	=	"Black wins!\tBlack (" ++ bStrat ++ "): " ++ [(intToDigit(countPiece (flatten (theBoard state)) BP ))]
+		++ "\tWhite (" ++ wStrat ++ "): " ++ [(intToDigit(countPiece (flatten (theBoard state)) WP))]
+getWinnerString state wStrat bStrat| countPiece (flatten (theBoard state)) BP < countPiece (flatten (theBoard state)) WP 
+	=	"White wins!\tBlack (" ++ bStrat ++ "): " ++ [(intToDigit(countPiece (flatten (theBoard state)) BP ))]
+		++ "\tWhite (" ++ wStrat ++ "): " ++ [(intToDigit(countPiece (flatten (theBoard state)) WP))]	
 
 
 --Checks if there is a clash on the board (the destination of both moves is the same)                
@@ -298,20 +293,20 @@ handlePromotion state player | player == White = GameState None
 
 handlePlacement :: GameState -> Maybe[(Int,Int)] -> Player -> GameState
 handlePlacement state move player | move == Nothing && player == Black =
-								   GameState NullPlacedPawn 
+                                   GameState NullPlacedPawn 
                                    (blackPen state) 
                                    None 
                                    (whitePen state) 
                                    (theBoard state) 
 
-								   | move == Nothing && player == White =
-								   GameState None
+                                   | move == Nothing && player == White =
+                                   GameState None
                                    (blackPen state) 
                                    NullPlacedPawn
                                    (whitePen state) 
                                    (theBoard state) 
 
-								   | player == Black && ((getFromBoard (theBoard state) (head (fromJust move))) == E) = 
+                                   | player == Black && ((getFromBoard (theBoard state) (head (fromJust move))) == E) = 
                                    GameState (PlacedPawn((getPawn (theBoard state)),(head (fromJust move)))) 
                                    (blackPen state) 
                                    None 
@@ -337,7 +332,6 @@ handlePlacement state move player | move == Nothing && player == Black =
                                    (BadPlacedPawn((getPawn (theBoard state)),(head (fromJust move)))) 
                                    (whitePen state + 1) 
                                    (theBoard state)
-
 ---2D list utility functions-------------------------------------------------------
 
 -- | Replaces the nth element in a row with a new element.

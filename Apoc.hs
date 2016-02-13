@@ -108,20 +108,21 @@ main' args = do
 -- If there is a winner on the board, or if both players have passed there turns. 
 -- If they have, do not continue with another turn
 gameLoop :: GameState -> String -> String -> IO ()
-gameLoop state wStrat bStrat =  if (blackPlay state == Passed) && (whitePlay state == Passed) || not(isWinner state == Nothing)
-                                then do print state--handle win conditions here`
-                                else do    
-                                        print state
+gameLoop state wStrat bStrat | (blackPlay state == Passed) && (whitePlay state == Passed) 
+								|| not(isWinner state == Nothing) = do print state
+gameLoop state wStrat bStrat | ((pawn2Upgrade state) == True) = do print state
+gameLoop state wStrat bStrat | True = do 
+										print state
                                         
-                                        putStrLn "Enter the move coordinates for player Black in the form 'srcX srcY destX destY'\n(0 >= n >= 4, or just enter return for a 'pass') B2:" --Prompt the user
-                                        bMove <- pickMove bStrat state Normal Black    
+										putStrLn "Enter the move coordinates for player Black in the form 'srcX srcY destX destY'\n(0 >= n >= 4, or just enter return for a 'pass') B2:" --Prompt the user
+										bMove <- pickMove bStrat state Normal Black    
                                         
-                                        putStrLn "Enter the move coordinates for player White in the form 'srcX srcY destX destY'\n(0 >= n >= 4, or just enter return for a 'pass') B2:" --Prompt the user
-                                        
-                                        wMove <- pickMove wStrat state Normal White
+										putStrLn "Enter the move coordinates for player White in the form 'srcX srcY destX destY'\n(0 >= n >= 4, or just enter return for a 'pass') B2:" --Prompt the user
+                                       
+										wMove <- pickMove wStrat state Normal White
                                         --if(bMove == Nothing)||(wMove == Nothing)
-                                        
-                                        gameLoop (updateState state bMove wMove) wStrat bStrat
+											
+										gameLoop (updateState state bMove wMove) wStrat bStrat
                                         
                                         
 -- Takes the current GameState and the 2 players moves
@@ -184,26 +185,7 @@ pickMove strat state playtype player = if strat == "human"
                         then human state playtype player 
                         else return Nothing
 
--- Checks if there is a pawn to be promoted on either side of the board
-pawnPromotion :: GameState -> Bool
-pawnPromotion state = if (elem BP (head (theBoard state))) || (elem WP (last (theBoard state)))
-                      then True
-                      else False
---Takes a Board, returns a tuple with the location of the first pawn to be promoted (prioritizes Black pawns)
-getPawn :: Board -> (Int,Int)
-getPawn board = if(elem BP (head board))
-        then (findPawn BP (head board), 0)
-        else (findPawn WP (last board), 4)
 
---Returns the index in a list of the first instance of a piece        
-findPawn :: Cell -> [Cell] -> Int
-findPawn _ [] = -1
-findPawn piece (x:xs) =  if (x == piece)
-                         then 0
-                         else 1 + findPawn piece xs
-                      
-                      
-                      
 -- Game over conditions
 --One of the players looses all his/her pawns.  The other player is the winner. 
 --One of the players accumulates two penalty points.  The other player is the winner.
@@ -243,6 +225,26 @@ handleClash (b1:bs) (w1:ws) board | ((getFromBoard board b1) == BK && (getFromBo
                                     replace2 ( replace2 ( replace2 board (head ws) WK) b1 E) w1 E 
                                   | True =    replace2 ( replace2 board b1 E) w1 E
 
+-- Checks if there is a pawn to be promoted on either side of the board
+pawn2Upgrade :: GameState -> Bool
+pawn2Upgrade state = if (elem BP (head (theBoard state))) || (elem WP (last (theBoard state)))
+                      then True
+                      else False
+
+--Takes a Board, returns a tuple with the location of the first pawn to be promoted (prioritizes Black pawns)
+getPawn :: Board -> (Int,Int)
+getPawn board = if(elem BP (head board))
+        then (findPawn BP (head board), 0)
+        else (findPawn WP (last board), 4)
+
+
+--Returns the index in a list of the first instance of a piece        
+findPawn :: Cell -> [Cell] -> Int
+findPawn _ [] = -5
+findPawn piece (x:xs) =  if (x == piece)
+                         then 0
+                         else 1 + findPawn piece xs
+                      			  
 flatten :: [[a]] -> [a]
 flatten [] = []
 flatten (x:xs) = x ++ (flatten xs)
@@ -252,6 +254,9 @@ countPiece [] target = 0
 countPiece (x:xs) target | x == target = 1 + (countPiece xs target)
                          | True = countPiece xs target
                                   
+handlePromotion :: GameState -> GameState
+handlePromotion state = state
+								  
 ---2D list utility functions-------------------------------------------------------
 
 -- | Replaces the nth element in a row with a new element.

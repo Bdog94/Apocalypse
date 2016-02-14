@@ -82,6 +82,11 @@ randomGen = do
     randFour <- rand
     
     return (randOne : randTwo: randThree: randFour : randArr)
+    
+    
+
+randGen :: Int -> IO Int
+randGen num = getStdRandom $ randomR (0, num)
 
 
 

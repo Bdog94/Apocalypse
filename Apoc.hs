@@ -106,7 +106,10 @@ checkStrings (black:white:other) | (black /= "human" && black /= "greedy") = Fal
 -- If they have, do not continue with another turn
 gameLoop :: GameState -> String -> String -> IO ()
 gameLoop state wStrat bStrat | (blackPlay state == Passed) && (whitePlay state == Passed) 
-                                || not(isWinner state == Nothing) =  do putStrLn ((board2Str (theBoard state)) ++ ['\n'] ++ (getWinnerString state wStrat bStrat))
+                                || not(isWinner state == Nothing) =  do 
+																		print state 
+								
+																		(putStrLn (getWinnerString state wStrat bStrat))
 gameLoop state wStrat bStrat | ((pawn2Upgrade state) == True) && 
                                (((countPiece (flatten (theBoard state)) BK) 
                                 + (countPiece (flatten (theBoard state)) WK) )< 4) = 
@@ -156,6 +159,10 @@ gameLoop state wStrat bStrat | True = do
 
 updateState :: GameState -> Maybe ([(Int,Int)]) -> Maybe ([(Int,Int)]) -> GameState
 updateState state Nothing Nothing = GameState Passed (blackPen state) Passed (whitePen state) (theBoard state)
+updateState state bMove wMove | (bMove == Nothing) && not(isValidForPlayer (theBoard state) White (fromJust wMove)) = 
+										GameState Passed (blackPen state) (moveType state (fromJust wMove) White) (whitePen state +1) (theBoard state)
+updateState state bMove wMove | (wMove == Nothing) && not(isValidForPlayer (theBoard state) Black (fromJust bMove)) = 
+										GameState (moveType state (fromJust bMove) Black) (blackPen state+1) Passed (whitePen state) (theBoard state)
 updateState state bMove wMove | (bMove == Nothing) || (wMove == Nothing) = if (bMove == Nothing)
                                       then GameState Passed (blackPen state) (moveType state (fromJust wMove) White) (whitePen state) 
                                       (handlePlayerMove (theBoard state) (fromJust wMove) White)
@@ -231,6 +238,10 @@ isWinner game = if    not (elem '/' (board2Str (theBoard game)))
                 else Nothing
                 
 getWinnerString :: GameState -> String -> String -> String
+getWinnerString state wStrat bStrat| (whitePen state) >= 2 =    "Black wins!\tBlack (" ++ bStrat ++ "): " ++ [(intToDigit(countPiece (flatten (theBoard state)) BP ))]
+        ++ "\tWhite (" ++ wStrat ++ "): " ++ [(intToDigit(countPiece (flatten (theBoard state)) WP))]
+getWinnerString state wStrat bStrat| (blackPen state) >= 2 =    "White wins!\tBlack (" ++ bStrat ++ "): " ++ [(intToDigit(countPiece (flatten (theBoard state)) BP ))]
+        ++ "\tWhite (" ++ wStrat ++ "): " ++ [(intToDigit(countPiece (flatten (theBoard state)) WP))]    
 getWinnerString state wStrat bStrat| countPiece (flatten (theBoard state)) BP == countPiece (flatten (theBoard state)) WP 
     =    "The game was a Draw."
 getWinnerString state wStrat bStrat| countPiece (flatten (theBoard state)) BP > countPiece (flatten (theBoard state)) WP 

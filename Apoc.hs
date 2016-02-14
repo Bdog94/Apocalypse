@@ -87,9 +87,20 @@ main = main' (unsafePerformIO getArgs)
      2. run from the command line by calling this function with the value from (getArgs)
 -}
 main'           :: [String] -> IO()
-main' args | args == [] = do 
+main' args | args == [] =     do    
+                                choices <- getGameMode
+                                if(checkStrings choices == True)
+                                then gameLoop initBoard (head choices) (last choices)
+                                else putStrLn "Invalid strategy selected. Available strategies are:\n  human\n  greedy"
+main' args | length args == 2 = if(checkStrings args == True)
+                                then gameLoop initBoard (head args) (last args)
+                                else putStrLn "Invalid strategy selected. Available strategies are:\n  human\n  greedy"
 
-
+checkStrings :: [String] -> Bool
+checkStrings [] = False
+checkStrings (black:white:other) | (black /= "human" && black /= "greedy") = False 
+                                 | (white /= "human" && white /= "greedy") = False
+                                 | True = True
    
 -- If there is a winner on the board, or if both players have passed there turns. 
 -- If they have, do not continue with another turn
@@ -218,16 +229,16 @@ isWinner game = if    not (elem '/' (board2Str (theBoard game)))
                       then Just(White)
                       else Just(Black))
                 else Nothing
-				
+                
 getWinnerString :: GameState -> String -> String -> String
 getWinnerString state wStrat bStrat| countPiece (flatten (theBoard state)) BP == countPiece (flatten (theBoard state)) WP 
-	=	"The game was a Draw."
+    =    "The game was a Draw."
 getWinnerString state wStrat bStrat| countPiece (flatten (theBoard state)) BP > countPiece (flatten (theBoard state)) WP 
-	=	"Black wins!\tBlack (" ++ bStrat ++ "): " ++ [(intToDigit(countPiece (flatten (theBoard state)) BP ))]
-		++ "\tWhite (" ++ wStrat ++ "): " ++ [(intToDigit(countPiece (flatten (theBoard state)) WP))]
+    =    "Black wins!\tBlack (" ++ bStrat ++ "): " ++ [(intToDigit(countPiece (flatten (theBoard state)) BP ))]
+        ++ "\tWhite (" ++ wStrat ++ "): " ++ [(intToDigit(countPiece (flatten (theBoard state)) WP))]
 getWinnerString state wStrat bStrat| countPiece (flatten (theBoard state)) BP < countPiece (flatten (theBoard state)) WP 
-	=	"White wins!\tBlack (" ++ bStrat ++ "): " ++ [(intToDigit(countPiece (flatten (theBoard state)) BP ))]
-		++ "\tWhite (" ++ wStrat ++ "): " ++ [(intToDigit(countPiece (flatten (theBoard state)) WP))]	
+    =    "White wins!\tBlack (" ++ bStrat ++ "): " ++ [(intToDigit(countPiece (flatten (theBoard state)) BP ))]
+        ++ "\tWhite (" ++ wStrat ++ "): " ++ [(intToDigit(countPiece (flatten (theBoard state)) WP))]    
 
 
 --Checks if there is a clash on the board (the destination of both moves is the same)                

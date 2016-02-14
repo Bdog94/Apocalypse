@@ -77,17 +77,12 @@ validMode x
 
 getGameMode :: IO [String]
 getGameMode = do
-    putStrLn "Possible strategies: \n\thuman\n\tgreedy\nEnter the strategy for BLACK:"
+    putStrLn "Possible strategies: \n  human\n  greedy\nEnter the strategy for BLACK:"
     blackChoice <-getLine
-    when (blackChoice /= "greedy" && blackChoice /= "human") $ do 
-            putStrLn "  human"
-            putStrLn "  greedy"
             
     putStrLn "Enter the strategy for WHITE:"
     whiteChoice <-getLine
-    when (whiteChoice /= "greedy" && whiteChoice /= "human") $ do 
-            putStrLn "  human"
-            putStrLn "  greedy"
+
     putStrLn ">>>"
     let choices = [blackChoice, whiteChoice]
     return choices

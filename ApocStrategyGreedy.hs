@@ -85,8 +85,8 @@ randomGen = do
     
     
 
-randGen :: Int -> IO Int
-randGen num = getStdRandom $ randomR (0, num)
+zeroToNum :: Int -> IO Int
+zeroToNum num = getStdRandom $ randomR (0, num)
 
 
 

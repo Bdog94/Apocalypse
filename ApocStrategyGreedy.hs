@@ -6,25 +6,47 @@ import Data.Maybe (fromJust, isNothing)
 import System.IO.Unsafe
 import ApocTools
 import System.Random
+import AItools
+--import Apoc
 
 --For quick reference..
 --type Chooser = GameState -> PlayType -> Player -> IO (Maybe [(Int,Int)])
 
+
+greedyTest :: IO (Maybe [(Int, Int)])
+
+greedyTest =  greedy initBoard Normal White 
+			 
+greedyTest2 = validMovesGenPlayer (theBoard initBoard) White (generateMovesForGreedyStrat (theBoard initBoard) ) 
+
+
+
+-- |
+greedy :: Chooser 
+greedy b playType player = determineMove (validMovesGenPlayer (theBoard b) player (generateMovesForGreedyStrat (theBoard b))) b playType player
+
+
+
 -- | This function determines the move that the AI will take
 determineMove :: [ ((Int , Int) , (Int , Int) )] ->Chooser		
 
-determineMove [(source, dest)] b Normal player = return (Just([(source), pickMove(sortMoves( evalMoves [(source,dest)] b player ) )]))			
-determineMove [(source, dest)] b PawnPlacement player = return (Nothing)
+determineMove [] _ _ _ = return (Nothing)
+determineMove ((source, dest) : list) b Normal player         | player == White || player == Black
+							 = return (Just(pickMoveGreedy(sortMoves( evalMoves ((source,dest) : list) b player ) )))			
+determineMove ((source, dest) : list ) b PawnPlacement player  | player == White || player == Black
+														 = return (Nothing)
+
+
 
 
 -- Probably is not needed but makes it easier to select a move once the list has been sorted...
 -- Also allows for a simple front to change if we need to add randomness						
-pickMove :: [(Int, (Int, Int))] -> (Int, Int)
+pickMoveGreedy :: [(Int, ((Int, Int), (Int, Int)))] -> [(Int, Int)]
 
-pickMove ((val, dest):xs ) = dest
+pickMoveGreedy ((val, (source,dest)):xs ) = [(source), (dest)]
  
 --Sorts all the move objects       
-sortMoves :: [(Int, (Int, Int))] -> [(Int, (Int,Int))]
+sortMoves :: [(Int, ((Int, Int), (Int, Int)))] -> [(Int, ((Int,Int), (Int, Int)) )]
 sortMoves [] = []
 sortMoves ((val,(dest)):xs) = (sortMoves greater) ++ [(val,(dest))] ++ (sortMoves lesser)
      where
@@ -33,14 +55,14 @@ sortMoves ((val,(dest)):xs) = (sortMoves greater) ++ [(val,(dest))] ++ (sortMove
           
 
 -- similar to >= val, the second value is the wrapper structure for a move
-greaterComparator :: Int-> (Int, (Int, Int)) -> Bool
+greaterComparator :: Int-> (Int, ((Int, Int), (Int, Int))) -> Bool
 
 greaterComparator val (val_1, ( _ , _))  = if val_1 >= val
                                           then True
                                           else False
     
 -- similar to < val, the second value is the wrapper structure for a move                                      
-lessComparator :: Int-> (Int, (Int, Int)) -> Bool
+lessComparator :: Int-> (Int, ((Int, Int), (Int, Int))) -> Bool
 
 lessComparator val (val_1, ( _ , _))  = if val_1 >= val
                                           then False
@@ -49,10 +71,10 @@ lessComparator val (val_1, ( _ , _))  = if val_1 >= val
 
 
 --The first int in the last part is the score the second last is the destination
-evalMoves ::  [ ((Int , Int) , (Int , Int) )] -> GameState -> Player -> [(Int, (Int, Int))] 
+evalMoves ::  [ ((Int , Int) , (Int , Int) )] -> GameState -> Player -> [(Int, ((Int, Int), (Int, Int)))] 
 
 evalMoves [] _ _ = []
-evalMoves ((source, dest):xs) game p =  [(evalMove (source,dest) game p, dest)] ++ evalMoves xs game p
+evalMoves ((source, dest):xs) game p =  [(evalMove (source,dest) game p, (source, dest))] ++ evalMoves xs game p
 
 evalMove  ::  ((Int , Int) , (Int , Int))    -> GameState -> Player -> Int
 evalMove  ( (a,b), (c,4)) game White  = 5

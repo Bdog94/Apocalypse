@@ -21,9 +21,10 @@ import Data.List
 import System.Environment
 import System.IO.Unsafe
 import ApocTools
-import ApocStrategyHuman
 import Data.Char
---import ApocStrategyGreedy
+import ApocStrategyGreedy
+import ApocStrategyHuman
+import ApocStrategyRandom
 
 --TestCode 
 gameOverBoard1       :: GameState
@@ -70,6 +71,8 @@ promoBoard1 = GameState Init 0 Init 0
                           [E ,WP , E , E , E ],
                           [E, E , BP , E , E],
                           [BK, E, E,  E , BK] ]
+                          
+
 
 
 
@@ -214,7 +217,7 @@ handleBothPlayerMoves board black bMove white wMove | True =  handlePlayerMove (
 --Takes a string from gameLoop, what kind of move to make, and picks the corresponding strategy and returns it's move 
 pickMove :: String -> GameState -> PlayType -> Player -> IO (Maybe[(Int,Int)])
 pickMove strat state playtype player | strat == "human" = human state playtype player 
---pickMove strat state playtype player | strat == "greedy" = greedy state playtype player 
+pickMove strat state playtype player | strat == "greedy" = greedy state playtype player 
 pickMove strat state playtype player | True = return Nothing
 
 
@@ -366,6 +369,15 @@ replace xs n elem = let (ys,zs) = splitAt n xs
 -- | Replaces the (x,y)th element in a list of lists with a new element.
 replace2        :: [[a]] -> (Int,Int) -> a -> [[a]]
 replace2 xs (x,y) elem = replace xs y (replace (xs !! y) x elem)
+
+
+-- | Similar to validMovesGenerator but is used in conjunction with the player
+validMovesGenPlayer :: Board -> Player -> [ ((Int, Int), (Int, Int))] -> [ ((Int, Int) , (Int , Int))]
+
+validMovesGenPlayer theBoard player [] = []
+validMovesGenPlayer theBoard player ((source, dest) :xs) = if isValidForPlayer theBoard player ([(source)] ++ [(dest)])
+														   then [(source, dest)] ++ validMovesGenPlayer theBoard player xs
+														   else validMovesGenPlayer theBoard player xs
 
 
 --  | This method will determine the list of valid moves

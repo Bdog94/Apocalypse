@@ -34,7 +34,7 @@ determineMove [] _ _ _ = return (Nothing)
 determineMove ((source, dest) : list) b Normal player         | player == White || player == Black
 							 = return (Just(pickMoveGreedy(sortMoves( evalMoves ((source,dest) : list) b player ) )))			
 determineMove ((source, dest) : list ) b PawnPlacement player  | player == White || player == Black
-														 = return (Nothing)
+														 = return (Just([findFirstEmptySpot (theBoard b)]))
 
 
 

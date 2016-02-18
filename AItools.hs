@@ -6,11 +6,31 @@ import System.IO.Unsafe
 import ApocTools
 import System.Random
 
---choseRandom :: [((Int,Int), (Int, Int))] -> IO ((Int, Int), (Int, Int))
---choseRandom list = fmap (\num -> (list !! num)) (zeroToNum  (length list) )
+
 
 zeroToNum :: Int -> IO Int
 zeroToNum num = getStdRandom $ randomR (0, num)
+
+-- |
+findFirstEmptySpot :: Board -> (Int, Int)
+
+findFirstEmptySpot b = indexOfEmptySpot (formatStringForGreedy (board2Str b)) 0
+
+
+indexOfEmptySpot :: String -> Int -> (Int,Int)
+
+indexOfEmptySpot list    slot | slot > 25  || slot < 0= (0, 0)
+indexOfEmptySpot (x :xs) slot = if searchForEmptyChar x 
+								then ( div slot  5,  mod slot  5)
+								else indexOfEmptySpot xs (slot + 1)
+
+searchForEmptyChar :: Char -> Bool
+
+searchForEmptyChar '_' = True
+searchForEmptyChar _   = False
+
+
+
 
 -- | Similar to validMovesGenerator but is used in conjunction with the player
 validMovesGenPlayer :: Board -> Player -> [ ((Int, Int), (Int, Int))] -> [ ((Int, Int) , (Int , Int))]

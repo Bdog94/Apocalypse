@@ -113,14 +113,14 @@ gameLoop state wStrat bStrat | (blackPlay state == Passed) && (whitePlay state =
 																		print state 
 								
 																		(putStrLn (getWinnerString state wStrat bStrat))
-gameLoop state wStrat bStrat | ((pawn2Upgrade state) == True) && 
+                             | ((pawn2Upgrade state) == True) && 
                                (((countPiece (flatten (theBoard state)) BK) 
                                 + (countPiece (flatten (theBoard state)) WK) )< 4) = 
                                 do 
                                     print state
                                                                                         
                                     (gameLoop (handlePromotion state (getPawnPlayer (theBoard state) (getPawn(theBoard state)))) wStrat bStrat)
-gameLoop state wStrat bStrat | ((pawn2Upgrade state) == True) && (getPawnPlayer (theBoard state) (getPawn(theBoard state)) == Black)
+                             | ((pawn2Upgrade state) == True) && (getPawnPlayer (theBoard state) (getPawn(theBoard state)) == Black)
                                        = do 
                                                 print state
                                                 putStr(if(bStrat == "human")
@@ -128,7 +128,7 @@ gameLoop state wStrat bStrat | ((pawn2Upgrade state) == True) && (getPawnPlayer 
                                                 else "")
                                                 move <- pickMove bStrat state PawnPlacement Black
                                                 (gameLoop (handlePlacement state move Black) wStrat bStrat)
-gameLoop state wStrat bStrat | ((pawn2Upgrade state) == True) && (getPawnPlayer (theBoard state) (getPawn(theBoard state)) == White)
+                             | ((pawn2Upgrade state) == True) && (getPawnPlayer (theBoard state) (getPawn(theBoard state)) == White)
                                        = do 
                                                 print state
                                                 putStr(if(wStrat == "human")
@@ -136,7 +136,7 @@ gameLoop state wStrat bStrat | ((pawn2Upgrade state) == True) && (getPawnPlayer 
                                                 else "")
                                                 move <- pickMove wStrat state PawnPlacement White
                                                 (gameLoop (handlePlacement state move White) wStrat bStrat)
-gameLoop state wStrat bStrat | True = do  
+                             | True = do  
                                             print state
                                         
                                             putStr (if(bStrat == "human")
@@ -164,18 +164,18 @@ updateState :: GameState -> Maybe ([(Int,Int)]) -> Maybe ([(Int,Int)]) -> GameSt
 updateState state Nothing Nothing = GameState Passed (blackPen state) Passed (whitePen state) (theBoard state)
 updateState state bMove wMove | (bMove == Nothing) && not(isValidForPlayer (theBoard state) White (fromJust wMove)) = 
 										GameState Passed (blackPen state) (moveType state (fromJust wMove) White) (whitePen state +1) (theBoard state)
-updateState state bMove wMove | (wMove == Nothing) && not(isValidForPlayer (theBoard state) Black (fromJust bMove)) = 
+                              | (wMove == Nothing) && not(isValidForPlayer (theBoard state) Black (fromJust bMove)) = 
 										GameState (moveType state (fromJust bMove) Black) (blackPen state+1) Passed (whitePen state) (theBoard state)
-updateState state bMove wMove | (bMove == Nothing) || (wMove == Nothing) = if (bMove == Nothing)
+                              | (bMove == Nothing) || (wMove == Nothing) = if (bMove == Nothing)
                                       then GameState Passed (blackPen state) (moveType state (fromJust wMove) White) (whitePen state) 
                                       (handlePlayerMove (theBoard state) (fromJust wMove) White)
                                       else GameState (moveType state (fromJust bMove) Black) (blackPen state) Passed (whitePen state) 
                                       (handlePlayerMove (theBoard state) (fromJust bMove) Black)
-updateState state bMove wMove | not(    isValidForPlayer (theBoard state) Black (fromJust bMove))
+                              | not(    isValidForPlayer (theBoard state) Black (fromJust bMove))
                                 && not( isValidForPlayer (theBoard state) White (fromJust wMove))    
                                 =  GameState (Goofed (format2Moves (fromJust bMove))) ((blackPen state)+1) (Goofed ( format2Moves (fromJust wMove) )) ((whitePen state)+1) (theBoard state)
                                                                        
-updateState state bMove wMove | not(    isValidForPlayer (theBoard state) Black (fromJust bMove))
+                              | not(    isValidForPlayer (theBoard state) Black (fromJust bMove))
                                 || not( isValidForPlayer (theBoard state) White (fromJust wMove))    
                                 =  if    (isValidForPlayer (theBoard state) Black (fromJust bMove))
                                    then GameState (moveType state (fromJust bMove) Black) (blackPen state) (Goofed ( format2Moves (fromJust wMove) )) ((whitePen state)+1) 
@@ -184,7 +184,7 @@ updateState state bMove wMove | not(    isValidForPlayer (theBoard state) Black 
                                    else GameState (Goofed (format2Moves (fromJust bMove))) ((blackPen state)+1) (moveType state (fromJust wMove) White) (whitePen state) 
                                    (handlePlayerMove (theBoard state) (fromJust wMove) White)
                                                                  
-updateState state bMove wMove | isValidForPlayer (theBoard state) Black (fromJust bMove)
+                              | isValidForPlayer (theBoard state) Black (fromJust bMove)
                                 && isValidForPlayer (theBoard state) White (fromJust wMove)
                                          = GameState  (Played (head (fromJust bMove), head(tail (fromJust bMove))))
                                            (blackPen state)
@@ -209,16 +209,20 @@ handlePlayerMove b ((x_s, y_s) : (x_d, y_d) : xs) p =
                     replace2 (replace2 b (x_d, y_d) (getFromBoard b (x_s, y_s))) (x_s, y_s) E
 
 handleBothPlayerMoves :: Board -> Player -> ([(Int, Int)]) -> Player -> ([(Int, Int)]) -> Board
-handleBothPlayerMoves board black bMove white wMove | (head wMove) == (last bMove) =  handlePlayerMove (handlePlayerMove board wMove white) bMove black
-handleBothPlayerMoves board black bMove white wMove | (head bMove) == (last wMove) =  handlePlayerMove (handlePlayerMove board bMove black) wMove white
-handleBothPlayerMoves board black bMove white wMove | True =  handlePlayerMove (handlePlayerMove board bMove black) wMove white
+handleBothPlayerMoves board black bMove white wMove | ((head wMove) == (last bMove)) && ((head bMove) == (last wMove))
+                                                      = handlePieceSwap board (getFromBoard board (head bMove)) (getFromBoard board (head wMove)) bMove
+                                                    | (head wMove) == (last bMove) =  handlePlayerMove (handlePlayerMove board wMove white) bMove black
+                                                    | (head bMove) == (last wMove) =  handlePlayerMove (handlePlayerMove board bMove black) wMove white
+                                                    | True =  handlePlayerMove (handlePlayerMove board bMove black) wMove white
 
+handlePieceSwap :: Board -> Cell -> Cell -> [(Int, Int)] -> Board
+handlePieceSwap board bPiece wPiece (black:white:rest) = replace2 (replace2 board white bPiece) black wPiece
 
 --Takes a string from gameLoop, what kind of move to make, and picks the corresponding strategy and returns it's move 
 pickMove :: String -> GameState -> PlayType -> Player -> IO (Maybe[(Int,Int)])
 pickMove strat state playtype player | strat == "human" = human state playtype player 
-pickMove strat state playtype player | strat == "greedy" = greedy state playtype player 
-pickMove strat state playtype player | True = return Nothing
+                                     | strat == "greedy" = greedy state playtype player 
+                                     | True = return Nothing
 
 
 -- Game over conditions

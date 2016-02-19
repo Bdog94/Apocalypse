@@ -1,7 +1,5 @@
 {- | This module is used for CPSC 449 for the Apocalypse assignment.
-
 Feel free to modify this file as you see fit.
-
 Copyright: Copyright 2016, Rob Kremer (rkremer@ucalgary.ca), University of Calgary.
 Permission to use, copy, modify, distribute and sell this software
 and its documentation for any purpose is hereby granted without fee, provided
@@ -10,7 +8,6 @@ copyright notice and this permission notice appear in supporting
 documentation. The University of Calgary makes no representations about the
 suitability of this software for any purpose. It is provided "as is" without
 express or implied warranty.
-
 -}
 
 module Main(main) where
@@ -85,7 +82,6 @@ promoBoard1 = GameState Init 0 Init 0
 main = main' (unsafePerformIO getArgs)
 
 {- | We have a main' IO function so that we can either:
-
      1. call our program from GHCi in the usual way
      2. run from the command line by calling this function with the value from (getArgs)
 -}
@@ -94,15 +90,15 @@ main' args | args == [] =     do
                                 choices <- getGameMode
                                 if(checkStrings choices == True)
                                 then gameLoop initBoard (head choices) (last choices)
-                                else putStrLn "Invalid strategy selected. Available strategies are:\n  human\n  greedy"
+                                else putStrLn "Invalid strategy selected. Available strategies are:\n  human\n  greedy\n random"
 main' args | length args == 2 = if(checkStrings args == True)
                                 then gameLoop initBoard (head args) (last args)
-                                else putStrLn "Invalid strategy selected. Available strategies are:\n  human\n  greedy"
+                                else putStrLn "Invalid strategy selected. Available strategies are:\n  human\n  greedy\n random"
 
 checkStrings :: [String] -> Bool
 checkStrings [] = False
-checkStrings (black:white:other) | (black /= "human" && black /= "greedy") = False 
-                                 | (white /= "human" && white /= "greedy") = False
+checkStrings (black:white:other) | (black /= "human" && black /= "greedy" && black /= "random") = False 
+                                 | (white /= "human" && white /= "greedy" && white /= "random") = False
                                  | True = True
    
 -- If there is a winner on the board, or if both players have passed there turns. 

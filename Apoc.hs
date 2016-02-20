@@ -85,7 +85,11 @@ main = main' (unsafePerformIO getArgs)
      1. call our program from GHCi in the usual way
      2. run from the command line by calling this function with the value from (getArgs)
 -}
-main'           :: [String] -> IO()
+
+-- | This is main', this will get player strategies by checking the cmd line args, or by calling getGameMode, then it will call gameLoop
+
+main'           :: [String] -- ^ command line arguments
+                -> IO() 
 main' args | args == [] =     do    
                                 choices <- getGameMode
                                 if(checkStrings choices == True)
@@ -95,15 +99,27 @@ main' args | length args == 2 = if(checkStrings args == True)
                                 then gameLoop initBoard (head args) (last args)
                                 else putStrLn "Invalid strategy selected. Available strategies are:\n  human\n  greedy\n random"
 
-checkStrings :: [String] -> Bool
-checkStrings [] = False
-checkStrings (black:white:other) | (black /= "human" && black /= "greedy" && black /= "random") = False 
+
+-- | The checkStrings function will check to see if each element in a list of strings is a valid player strategy
+checkStrings :: [String] -- ^ list of player strategies
+                 -> Bool -- ^ True if valid, False if not valid
+                 
+checkStrings [] = False --empty list always returns false
+checkStrings [singleElement] = False -- false if list has only one element
+checkStrings (black:white:other) | (black /= "human" && black /= "greedy" && black /= "random") = False -- false if =/ "human", "greedy" or "random"
                                  | (white /= "human" && white /= "greedy" && white /= "random") = False
-                                 | True = True
+                                 | True = True -- true if none of the above conditionals were satisfied
+ 
+ 
    
 -- If there is a winner on the board, or if both players have passed there turns. 
 -- If they have, do not continue with another turn
-gameLoop :: GameState -> String -> String -> IO ()
+
+-- | The gameLoop function is the overall game being played in a recursive loop
+gameLoop :: GameState -- ^ state of game
+         -> String -- ^ white player strategy
+         -> String -- ^ black player strategy
+         -> IO ()
 gameLoop state wStrat bStrat | (blackPlay state == Passed) && (whitePlay state == Passed) 
                                 || not(isWinner state == Nothing) =  do 
 																		print state 
@@ -156,7 +172,13 @@ gameLoop state wStrat bStrat | (blackPlay state == Passed) && (whitePlay state =
 --Handle isValid
 --Only works with Normal moves, doesn't account for pawn placement or goofs by the player
 
-updateState :: GameState -> Maybe ([(Int,Int)]) -> Maybe ([(Int,Int)]) -> GameState
+
+-- | updateState is a function that will update the gameState depending on the given player moves in the parameters
+updateState :: GameState -- ^ initial gameState
+            -> Maybe ([(Int,Int)]) -- ^ black player move
+            -> Maybe ([(Int,Int)]) -- ^ white player move
+            -> GameState -- ^ return new gameState depending on the moves above
+            
 updateState state Nothing Nothing = GameState Passed (blackPen state) Passed (whitePen state) (theBoard state)
 updateState state bMove wMove | (bMove == Nothing) && not(isValidForPlayer (theBoard state) White (fromJust wMove)) = 
 										GameState Passed (blackPen state) (moveType state (fromJust wMove) White) (whitePen state +1) (theBoard state)
@@ -189,33 +211,68 @@ updateState state bMove wMove | (bMove == Nothing) && not(isValidForPlayer (theB
                                            (if not(isClash (head(tail (fromJust bMove))) (head(tail (fromJust wMove))))
                                            then (handleBothPlayerMoves (theBoard state) Black (fromJust bMove) White (fromJust wMove))
                                             else (handleClash (fromJust bMove) (fromJust wMove) (theBoard state)))
-                                            
-format2Moves :: [(Int,Int)] -> ((Int, Int), (Int, Int))
+
+-- | format2Moves is a function that will reformat a list of moves, into 2 tuples, the first being the coordinates of the initial place, and second being final place.                                          
+format2Moves :: [(Int,Int)] -- ^ given move within a list
+             -> ((Int, Int), (Int, Int)) -- ^ return new move in 2 tuples, rather than a list
+
 format2Moves move = (head move , head(tail move))
 
-moveType :: GameState -> ([(Int, Int)]) -> Player -> Played
+
+-- | This function will take a player move and determine if it was played, goofed, or if it was an upgrade from a pawn to a knight.
+moveType :: GameState -- ^ Initial Game State
+         -> ([(Int, Int)]) -- ^ Given Player Move
+         -> Player -- ^ Player
+         -> Played -- ^ Type Of Move
 
 moveType state list p | length list == 1 = UpgradedPawn2Knight (head list)
 moveType state ((x_s, y_s) : (x_d, y_d) : list) p | not(isValidMove (theBoard state) (x_s, y_s) (x_d, y_d))  = Goofed ((x_s, y_s), (x_d, y_d))
 moveType state list p = Played ( (head list), list !! 1)
 
-handlePlayerMove :: Board -> ([(Int, Int)]) -> Player -> Board
+
+-- | handlePlayerMove is a function that will take a board, a move and a player and update the board with the given move
+handlePlayerMove :: Board -- ^ Initial Game Board
+                    -> ([(Int, Int)]) -- ^ Player Move
+                    -> Player -- ^ Player
+                    -> Board -- ^ return updated board
 
 handlePlayerMove b ((x_s, y_s) : (x_d, y_d) : xs) p = 
                     replace2 (replace2 b (x_d, y_d) (getFromBoard b (x_s, y_s))) (x_s, y_s) E
 
-handleBothPlayerMoves :: Board -> Player -> ([(Int, Int)]) -> Player -> ([(Int, Int)]) -> Board
+
+-- | handleBothPlayerMoves is a function that will take the board, and 2 players along with there moves and update the board with those given moves.
+handleBothPlayerMoves :: Board -- ^ Initial Game Board
+                         -> Player -- ^ Black Player
+                         -> ([(Int, Int)]) -- ^ Black Player Move
+                         -> Player -- ^ White Player
+                         -> ([(Int, Int)]) -- ^ White Player Move
+                         -> Board -- ^ updated Game Board
+                         
 handleBothPlayerMoves board black bMove white wMove | ((head wMove) == (last bMove)) && ((head bMove) == (last wMove))
                                                       = handlePieceSwap board (getFromBoard board (head bMove)) (getFromBoard board (head wMove)) bMove
                                                     | (head wMove) == (last bMove) =  handlePlayerMove (handlePlayerMove board wMove white) bMove black
                                                     | (head bMove) == (last wMove) =  handlePlayerMove (handlePlayerMove board bMove black) wMove white
                                                     | True =  handlePlayerMove (handlePlayerMove board bMove black) wMove white
 
-handlePieceSwap :: Board -> Cell -> Cell -> [(Int, Int)] -> Board
+
+-- | handlePieceSwap is a function that swap 2 pieces on a board and update that given board
+handlePieceSwap :: Board -- ^ Initial Game Board
+                   -> Cell -- ^ Black Piece
+                   -> Cell -- ^ White Piece
+                   -> [(Int, Int)] -- ^ Player Move
+                   -> Board -- ^ updated Game Board
+
 handlePieceSwap board bPiece wPiece (black:white:rest) = replace2 (replace2 board white bPiece) black wPiece
 
---Takes a string from gameLoop, what kind of move to make, and picks the corresponding strategy and returns it's move 
-pickMove :: String -> GameState -> PlayType -> Player -> IO (Maybe[(Int,Int)])
+
+
+
+-- | The pickMove function will take a string from the gameLoop, what kind of move it makes, and picks the corresponding strategy and returns the move
+pickMove :: String -- ^ strategy
+            -> GameState -- ^ Initial Game State
+            -> PlayType -- ^ Kind of move
+            -> Player -- ^ Player
+            -> IO (Maybe[(Int,Int)]) -- ^ Move
 pickMove strat state playtype player | strat == "human" = human state playtype player 
                                      | strat == "greedy" = greedy state playtype player 
                                      | strat == "random" = randomStrategy state playtype player
@@ -229,7 +286,11 @@ pickMove strat state playtype player | strat == "human" = human state playtype p
 -- | This method will return the winner or return Nothing.
 -- | Note it is not compatible with testing whether or not both players pass on the same round
 -- that functionality is easier to do in the gameLoop I believe
-isWinner :: GameState -> Maybe Player
+
+
+-- | The isWinner function will take the gameState, and determine of a player has won the game, if he has, it will return that player.
+isWinner :: GameState -- ^ Initial Game State
+            -> Maybe Player -- ^ Player who won (or nothing if nobody has won)
 
 isWinner game | (blackPen game) >= 2 = Just(White)            --Black has 2 or more penalties which makes White the winner
 isWinner game | (whitePen game) >= 2 = Just(Black)            --White has 2 or more penalties which makes White the winner
@@ -240,8 +301,15 @@ isWinner game = if    not (elem '/' (board2Str (theBoard game)))
                       then Just(White)
                       else Just(Black))
                 else Nothing
-                
-getWinnerString :: GameState -> String -> String -> String
+ 
+ 
+
+-- | getWinnerString is a function that will return a string that prints who won the game, given the gameState, and the player strategies               
+getWinnerString :: GameState -- ^ Initial Game State
+                   -> String -- ^ White Player Strategy
+                   -> String -- ^ Black Player Strategy
+                   -> String -- ^ Returned Information String
+                   
 getWinnerString state wStrat bStrat| (whitePen state) >= 2 =    "Black wins!\tBlack (" ++ bStrat ++ "): " ++ [(intToDigit(countPiece (flatten (theBoard state)) BP ))]
         ++ "\tWhite (" ++ wStrat ++ "): " ++ [(intToDigit(countPiece (flatten (theBoard state)) WP))]
 getWinnerString state wStrat bStrat| (blackPen state) >= 2 =    "White wins!\tBlack (" ++ bStrat ++ "): " ++ [(intToDigit(countPiece (flatten (theBoard state)) BP ))]
@@ -256,8 +324,12 @@ getWinnerString state wStrat bStrat| countPiece (flatten (theBoard state)) BP < 
         ++ "\tWhite (" ++ wStrat ++ "): " ++ [(intToDigit(countPiece (flatten (theBoard state)) WP))]    
 
 
---Checks if there is a clash on the board (the destination of both moves is the same)                
-isClash :: (Int,Int) -> (Int,Int) -> Bool
+
+
+-- | the isClash function will check to see if there is a clash on the game board (when destination of both moves is the same)              
+isClash :: (Int,Int) -- ^ First Player Move
+        -> (Int,Int) -- ^ Second Player Move
+        -> Bool -- ^ True if both moves have same destination, otherwise False
 isClash (x,y) (w,z) = if ((x == w)&&(y == z))
                       then True
                       else False
@@ -267,45 +339,78 @@ isClash (x,y) (w,z) = if ((x == w)&&(y == z))
 --2 pieces of the same type on the same space = both pieces destroyed
 --Returns the board in the new configuration when done
 
+
+
 --Note: This function performs no error checking (assumes that the moves were valid and that there is a clash)
-handleClash :: [(Int, Int)] -> [(Int, Int)] -> Board -> Board
+
+-- | handleClash is a function that will determine the outcome of a clash on the game board.
+handleClash :: [(Int, Int)] -- ^ Black Player Move
+            -> [(Int, Int)] -- ^ White Player Move
+            -> Board -- ^ Initial Game Board
+            -> Board -- ^ Return new Game Board after the clash
 handleClash (b1:bs) (w1:ws) board | ((getFromBoard board b1) == BK && (getFromBoard board w1) == WP) = 
                                     replace2 ( replace2 ( replace2 board (head bs) BK) b1 E) w1 E
                                   | ((getFromBoard board b1) == BP && (getFromBoard board w1) == WK) = 
                                     replace2 ( replace2 ( replace2 board (head ws) WK) b1 E) w1 E 
                                   | True =    replace2 ( replace2 board b1 E) w1 E
 
--- Checks if there is a pawn to be promoted on either side of the board
-pawn2Upgrade :: GameState -> Bool
+
+
+-- | pawn2Upgrade is a function that will check if there is a pawn to be promoted on either side of the board
+pawn2Upgrade :: GameState -- ^ Initial gameState
+                -> Bool -- Return True if there is a pawn to be upgraded, otherwise False.
 pawn2Upgrade state = if (elem BP (head (theBoard state))) || (elem WP (last (theBoard state)))
                       then True
                       else False
 
---Takes a Board, returns a tuple with the location of the first pawn to be promoted (prioritizes Black pawns)
-getPawn :: Board -> (Int,Int)
+
+-- | getPawn is a function that takes a Board, and returns a type with the location of the first pawn to be promoted (prioritizes Black pawns)
+getPawn :: Board -- ^ Initial Game Board
+           -> (Int,Int) -- ^ Coordinates of first pawn to be promoted
 getPawn board = if(elem BP (head board))
         then (findPawn BP (head board), 0)
         else (findPawn WP (last board), 4)
 
-getPawnPlayer :: Board -> (Int,Int) -> Player
+
+-- | getPawnPlayer is a function that returns which player a certain pawn on the board belongs to.
+getPawnPlayer :: Board -- ^ Initial Game Board
+                 -> (Int,Int) -- ^ Coordinates of Pawn
+                 -> Player -- ^ Return player who owns the pawn  in those coordinates
 getPawnPlayer board coord = playerOf (pieceOf (getFromBoard board coord))
---Returns the index in a list of the first instance of a piece        
-findPawn :: Cell -> [Cell] -> Int
+
+
+-- | The findPawn function will return the index in a list of the first instance of a pawn piece.   
+findPawn :: Cell -- ^ Given piece
+            -> [Cell] -- ^ List on the board
+            -> Int -- ^ Return index of firstPawn
 findPawn _ [] = -5
 findPawn piece (x:xs) =  if (x == piece)
                          then 0
                          else 1 + findPawn piece xs
-                                    
-flatten :: [[a]] -> [a]
+ 
+-- | flatten is a function that will take a 2d list and flatten it into a 1d list                                    
+flatten :: [[a]] -- ^ Given 2d list
+        -> [a] -- ^ Return 1d list
+        
 flatten [] = []
 flatten (x:xs) = x ++ (flatten xs)
 
-countPiece :: [Cell] -> Cell -> Int
+
+-- | countPiece is a function that counts the number of pieces in a list that are a specific kind of piece. 
+countPiece :: [Cell] -- ^ List to search through
+           -> Cell -- ^ type of piece
+           -> Int -- ^ Return number of those pieces on the board
 countPiece [] target = 0
 countPiece (x:xs) target | x == target = 1 + (countPiece xs target)
                          | True = countPiece xs target
-                                  
-handlePromotion :: GameState -> Player -> GameState
+               
+               
+  
+-- | handlePromotion is a function that will promote a pawn piece into a knight piece.                                   
+handlePromotion :: GameState -- ^ Initial GameState
+                -> Player  -- ^ Player
+                -> GameState -- ^ Return new updated GameState with the upgraded pawn
+                
 handlePromotion state player | player == Black = GameState (UpgradedPawn2Knight(getPawn (theBoard state)))
                                                             (blackPen state)
                                                             None
@@ -317,7 +422,12 @@ handlePromotion state player | player == White = GameState None
                                                             (whitePen state)
                                                             (replace2 (theBoard state) (getPawn (theBoard state)) WK)
 
-handlePlacement :: GameState -> Maybe[(Int,Int)] -> Player -> GameState
+
+-- | handlePlacement is a function that will take the gameState, a player move, a player and return a new gameState after that move.
+handlePlacement :: GameState -- ^ Initial GameState
+                -> Maybe[(Int,Int)] -- ^ Player Move
+                -> Player -- ^ Player
+                -> GameState -- ^ Return updated GameState
 handlePlacement state move player | move == Nothing && player == Black =
                                    GameState NullPlacedPawn 
                                    (blackPen state) 

@@ -7,15 +7,40 @@ import ApocTools
 import System.Random
 import AItools
 
+{-
 
-random :: Chooser
+ _ _ _ _ _
+|_|_|/|/|X|
+|/|#|X|_|_|
+|+|_|_|#|_|
+|_|_|_|_|_|
+|_|+|+|/|_|
 
-random b Normal        player = pickRandomMoveNormal b player
-random b PawnPlacement player = return(Nothing)
+-}
+
+randomTest1       :: GameState
+randomTest1 = GameState Init 0 Init 0
+                          [ [E, E, WP, WP, WK],
+                          [WP, BK , WK , E, E],
+                          [BP, E , E , BK , E],
+                          [E , E , E , E  , E],
+                          [E , BP, BP,  WP, E] ]
+
+
+
+randomStrategy :: Chooser
+
+randomStrategy b Normal        player = pickRandomMoveNormal b player
+randomStrategy b PawnPlacement player = pickRandomMovePawn (theBoard b) player
 
 pickRandomMoveNormal :: GameState -> Player -> IO(Maybe [(Int, Int)])
 
 pickRandomMoveNormal b player = choseRandom ( validMovesGenPlayer (theBoard b) player (generateMovesForGreedyStrat (theBoard b)) ) 
+
+pickRandomMovePawn b player = chosePawn ( generateAllEmptyMoves b )
+
+
+
 
 choseRandom :: [((Int,Int) , (Int, Int))] -> IO (Maybe [(Int,Int)])
 choseRandom []   = return(Nothing)
@@ -28,6 +53,8 @@ choseRandom list = do
 
 useInt :: Int -> Int 
 useInt x = x+10
+
+
 
 getNormalMoveAtIndex :: [((Int , Int), (Int, Int))] -> Int -> [(Int, Int)]
 

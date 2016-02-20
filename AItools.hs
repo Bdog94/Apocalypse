@@ -6,10 +6,22 @@ import System.IO.Unsafe
 import ApocTools
 import System.Random
 
+chosePawn :: [ (Int,Int)] ->IO (Maybe [(Int,Int)])
 
+chosePawn [] = return(Nothing)
+chosePawn list = do
+			int <- randomRIO (0, (length list - 1))
+			return(Just(getPawnMoveAtIndex list int))
+			
+getPawnMoveAtIndex   :: [(Int, Int)] -> Int -> [(Int, Int)]
+getPawnMoveAtIndex [] _ = []
+getPawnMoveAtIndex [(x,y)] _ = [(x,y)]
+getPawnMoveAtIndex ((x,y): list) 0 = [(x,y)]
+getPawnMoveAtIndex ((x,y): list) index = getPawnMoveAtIndex list (index - 1)
 
 zeroToNum :: Int -> IO Int
 zeroToNum num = getStdRandom $ randomR (0, num)
+
 
 -- |
 findFirstEmptySpot :: Board -> (Int, Int)
@@ -30,6 +42,18 @@ searchForEmptyChar '_' = True
 searchForEmptyChar _   = False
 
 
+generateAllEmptyMoves :: Board -> [(Int, Int)]
+
+generateAllEmptyMoves b = generateAllEmptyMoves' (formatStringForGreedy (board2Str b)) 0
+
+
+generateAllEmptyMoves' :: String -> Int -> [(Int,Int)]
+
+generateAllEmptyMoves' [] index = []
+generateAllEmptyMoves' _ index | index > 25 || index < 0 = []
+generateAllEmptyMoves' (x:xs) index = if x == '_' 
+									  then [(mod index 5, div index 5)] ++ generateAllEmptyMoves' xs (index +1) 
+									  else generateAllEmptyMoves' xs (index + 1)
 
 
 -- | Similar to validMovesGenerator but is used in conjunction with the player

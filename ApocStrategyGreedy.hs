@@ -11,6 +11,57 @@ import AItools
 
 --For quick reference..
 --type Chooser = GameState -> PlayType -> Player -> IO (Maybe [(Int,Int)])
+{-
+ _ _ _ _ _
+|X|/|/|+|_|
+|/|/|_|_|_|
+|_|_|_|_|_|
+|+|_|#|_|+|
+|#|+|+|_|X|
+
+
+ _ _ _ _ _
+|X|/|/|_|+|
+|/|/|_|_|_|
+|_|_|_|_|_|
+|+|_|#|_|+|
+|#|+|+|_|X|
+
+ _ _ _ _ _
+|_|_|/|#|_|
+|/|_|X|_|_|
+|_|/|_|X|_|
+|+|+|+|_|+|
+|#|_|_|_|_|
+
+-}
+
+greedyTest1       :: GameState
+greedyTest1 = GameState Init 0 Init 0
+                          [ [WK, WP, WP, BP, E],
+                          [WP, WP , E , E , E],
+                          [E , E , E , E , E ],
+                          [BP, E , BK , E , BP],
+                          [BK, BP, BP,  E , WK] ]
+                          
+greedyTestBoard2       :: GameState
+greedyTestBoard2 = GameState Init 0 Init 0
+                          [ [WK, WP, WP, E, BP],
+                          [WP, WP , E , E , E ],
+                          [E , E , E , E ,  E ],
+                          [BP, E , BK , E ,  BP],
+                          [BK, BP, BP,  E , WK] ]
+                          
+greedyTestBoard3       :: GameState
+greedyTestBoard3  = GameState Init 0 Init 0
+                          [ [E, E , WP, BK, E ],
+                          [WP, E , WK , E , E ],
+                          [E , WP , E , WK, E ],
+                          [BP, BP, BP , E , BP],
+                          [BK, E , E ,  E , E ] ]                          
+                          
+                          
+
 
 
 greedyTest :: IO (Maybe [(Int, Int)])
@@ -30,20 +81,36 @@ greedy b playType player = determineMove (validMovesGenPlayer (theBoard b) playe
 -- | This function determines the move that the AI will take
 determineMove :: [ ((Int , Int) , (Int , Int) )] ->Chooser		
 
-determineMove [] _ _ _ = return (Nothing)
 determineMove ((source, dest) : list) b Normal player         | player == White || player == Black
-							 = return (Just(pickMoveGreedy(sortMoves( evalMoves ((source,dest) : list) b player ) )))			
+							 = pickMoveGreedy(sortMoves( evalMoves ((source,dest) : list) b player ) )
+determineMove [(source, dest)] b Normal player | player == White 	|| player == Black
+							= return( Just ([(source), (dest)]))		
 determineMove ((source, dest) : list ) b PawnPlacement player  | player == White || player == Black
-														 = return (Just([findFirstEmptySpot (theBoard b)]))
+														 =  chosePawn ( generateAllEmptyMoves (theBoard b) )
+determineMove [] b PawnPlacement _ =  chosePawn ( generateAllEmptyMoves (theBoard b) )
+determineMove [] _ _ _ = return(Nothing)
 
 
 
 
 -- Probably is not needed but makes it easier to select a move once the list has been sorted...
 -- Also allows for a simple front to change if we need to add randomness						
-pickMoveGreedy :: [(Int, ((Int, Int), (Int, Int)))] -> [(Int, Int)]
+pickMoveGreedy :: [(Int, ((Int, Int), (Int, Int)))] -> IO (Maybe [(Int, Int)])
 
-pickMoveGreedy ((val, (source,dest)):xs ) = [(source), (dest)]
+pickMoveGreedy [(val, (source, dest))] = return( Just ( [(source),  (dest)]))
+pickMoveGreedy ((val_1, (source_1,dest_1)) : (val_2, (source_2, dest_2)) :xs ) = do 
+   	  int <- randomRIO (0 , 9)
+   	  if greedyComparator int
+   	  then return( Just([(source_2),  (dest_2)]))
+   	  else return( Just([(source_1),  (dest_1)]))
+
+ 
+greedyComparator :: Int -> Bool
+
+greedyComparator num = if (num >= 9) 
+					   then True
+					   else False
+ 
  
 --Sorts all the move objects       
 sortMoves :: [(Int, ((Int, Int), (Int, Int)))] -> [(Int, ((Int,Int), (Int, Int)) )]
@@ -77,16 +144,15 @@ evalMoves [] _ _ = []
 evalMoves ((source, dest):xs) game p =  [(evalMove (source,dest) game p, (source, dest))] ++ evalMoves xs game p
 
 evalMove  ::  ((Int , Int) , (Int , Int))    -> GameState -> Player -> Int
-evalMove  ( (a,b), (c,4)) game White  = 5
-evalMove  ( (a,b), (c,0)) game Black  = 5
+
 evalMove  ( (a,b), (c,d)) game player =  scoreMove player (cell2Char((getFromBoard (theBoard game) (c, d))))
 
 scoreMove :: Player -> Char -> Int
 
-scoreMove  Black 'X' = 2	--Black is taking out a White Knight
-scoreMove  White '#' = 2	--White is taking out a Black Knight
-scoreMove  Black '/' = 1    	--Black is taking out a White Pawn
-scoreMove  White '+' = 1 	--White is taking out a Black Pawn
+scoreMove  Black 'X' = 5	--Black is taking out a White Knight
+scoreMove  White '#' = 5	--White is taking out a Black Knight
+scoreMove  Black '/' = 4    --Black is taking out a White Pawn
+scoreMove  White '+' = 4 	--White is taking out a Black Pawn
 scoreMove  Black  c  = 0		 
 scoreMove  White  c  = 0
 

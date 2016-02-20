@@ -218,6 +218,7 @@ handlePieceSwap board bPiece wPiece (black:white:rest) = replace2 (replace2 boar
 pickMove :: String -> GameState -> PlayType -> Player -> IO (Maybe[(Int,Int)])
 pickMove strat state playtype player | strat == "human" = human state playtype player 
                                      | strat == "greedy" = greedy state playtype player 
+                                     | strat == "random" = randomStrategy state playtype player
                                      | True = return Nothing
 
 

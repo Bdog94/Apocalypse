@@ -1,3 +1,8 @@
+{- | This module is used for CPSC 449 for the Apocalypse assignment.
+     This module is where the functions related to the Human game strategy sit
+     Functions include getMove, getPlacement and getGameMode
+-}
+
 module ApocStrategyHuman where
 
 

@@ -34,6 +34,8 @@ import AItools
 |+|+|+|_|+|
 |#|_|_|_|_|
 
+
+
 -}
 
 greedyTest1       :: GameState

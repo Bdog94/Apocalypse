@@ -66,13 +66,11 @@ validMovesGenPlayer theBoard player ((source, dest) :xs) = if isValidForPlayer t
 --Additional check to ensure a player can only move their own piece
 isValidForPlayer :: Board -> Player -> [(Int,Int)] -> Bool
 isValidForPlayer board player [] = False
-isValidForPlayer board player (first:rest) =  if (((getFromBoard board first) == E) || (player == playerOf (pieceOf(getFromBoard board first))))  
-                                              then isValidMove board first (head rest)
-                                              else False
-                                        
+isValidForPlayer board player (first:rest) | (getFromBoard board first) == E = False
+										   | (player == playerOf (pieceOf(getFromBoard board first)))  = isValidMove board first (head rest)
+                                           | True = False
                                               
 
--- | Checks if a move is valid or not on the game board 
 isValidMove :: Board -> (Int,Int) -> (Int,Int) -> Bool
 isValidMove theBoard (x,y) (w,z)
     | (x<0) || (x>4)|| (y<0) || (y>4) || (w<0) || (w>4) || (z<0) || (z>4) = False
@@ -93,26 +91,21 @@ isValidMove theBoard (x,y) (w,z)
                || ((getFromBoard theBoard (w,z)) ==  WP))
         then True
         else False
-
-    |((getFromBoard theBoard (x,y)) == WP ) =               -- | A pawns move is valid if it:
-        if (((abs (x-w)) == 0) && ((y-z) == -1) && getFromBoard theBoard (w,z) == E)            -- | moves one space vertically into an open space
-        then True                                           -- | or move diagonally one space onto a space 
-        else if (((abs (x-w)) == 1) && ((y-z) == -1))       -- | occupied by an opponent's piece
-             && ( ((getFromBoard theBoard (w,z)) ==  BK)
-               || ((getFromBoard theBoard (w,z)) ==  BP))
-             then True
-             else False
-
-    |((getFromBoard theBoard (x,y)) == BP ) =
-        if (((abs (x-w)) == 0) && ((y-z) == 1) && getFromBoard theBoard (w,z)== E)
-        then True
-        else if (((abs (x-w)) == 1) && ((y-z) == 1)) 
-             && ( ((getFromBoard theBoard (w,z)) ==  WK)
-               || ((getFromBoard theBoard (w,z)) ==  WP))
-             then True
-             else False
-
-    |((getFromBoard theBoard (x,y)) == E )  = False
+ -- | A pawns move is valid if it:
+ -- | moves one space vertically into an open space
+ -- | or move diagonally one space onto a space 
+ -- | occupied by an opponent's piece
+    |((getFromBoard theBoard (x,y)) == WP ) && (((abs (x-w)) == 0) && ((y-z) == -1) && getFromBoard theBoard (w,z) == E)           
+        = True                                           
+    |((getFromBoard theBoard (x,y)) == WP ) && (((abs (x-w)) == 1) && ((y-z) == -1)) 
+	&& (((getFromBoard theBoard (w,z)) ==  BK) || ((getFromBoard theBoard (w,z)) ==  BP))
+             = True
+    |((getFromBoard theBoard (x,y)) == BP ) && (((abs (x-w)) == 0) && ((y-z) == 1) && getFromBoard theBoard (w,z) == E)           
+        = True                                           
+    |((getFromBoard theBoard (x,y)) == BP ) && (((abs (x-w)) == 1) && ((y-z) == 1)) 
+	&& (((getFromBoard theBoard (w,z)) ==  WK) || ((getFromBoard theBoard (w,z)) ==  WP))
+             = True
+    |True = False
 
 formatStringForGreedy :: String -> String 
 formatStringForGreedy s = filter helperFormatStringForGreedy (removeFront s)
@@ -134,23 +127,17 @@ generateMovesForGreedyStrat b = generateMovesForGreedyStratString (formatStringF
 
 generateMovesForGreedyStratString :: String -> Int  -> [((Int, Int) , (Int, Int))]
 generateMovesForGreedyStratString [] _ = []
-generateMovesForGreedyStratString (c: cs) prevLen |  (prevLen + length(c:cs)) > 29 || (prevLen + length(c:cs)) < 0 = []
-generateMovesForGreedyStratString (c: cs) prevLen |  (prevLen) > 19 = 
-                              generateMovesForGreedyStratUsingChar c (4, (prevLen) `mod` 5) ++ generateMovesForGreedyStratString cs (prevLen +1)
-generateMovesForGreedyStratString (c: cs) prevLen |  (prevLen) > 14 = 
-                              generateMovesForGreedyStratUsingChar c (3, (prevLen) `mod` 5) ++ generateMovesForGreedyStratString cs (prevLen +1)
-generateMovesForGreedyStratString (c: cs) prevLen |  (prevLen) > 9 = 
-                              generateMovesForGreedyStratUsingChar c (2, (prevLen) `mod` 5) ++ generateMovesForGreedyStratString cs (prevLen +1)
-generateMovesForGreedyStratString (c: cs) prevLen |  (prevLen) > 4 = 
-                              generateMovesForGreedyStratUsingChar c (1, (prevLen) `mod` 5) ++ generateMovesForGreedyStratString cs (prevLen +1)
-generateMovesForGreedyStratString (c: cs) prevLen |  (prevLen) >= 0 = 
-                              generateMovesForGreedyStratUsingChar c (0, (prevLen `mod` 5)) ++ generateMovesForGreedyStratString cs (prevLen +1)
+
+generateMovesForGreedyStratString (c: cs) num |  (num) > 25 || (num) < 0 = []
+
+generateMovesForGreedyStratString (c: cs) num = generateMovesForGreedyStratUsingChar c ( mod num 5, div num 5) ++ generateMovesForGreedyStratString cs (num + 1)
+
                  
 generateMovesForGreedyStratUsingChar :: Char -> (Int, Int) -> [ ((Int, Int), (Int, Int))]
 
 generateMovesForGreedyStratUsingChar c (x,y) | c == '_' = []
-generateMovesForGreedyStratUsingChar c (x,y) | c == '/' || c == '+' = [ ((x,y), (x, y+1))]++ [ ((x,y), (x -1 , y))] ++ [((x,y), (x+1, y+1))] ++ [((x,y) , (x -1, y +1))] ++
-                                            [((x,y) , (x, y -1 ))] ++ [((x,y), (x - 1, y))] ++ [((x,y) , (x-1, y -1))] ++ [((x,y), (x +1 , y -1))]
+generateMovesForGreedyStratUsingChar c (x,y) | c == '/' || c == '+' = [((x,y), (x  , y+1))]++ [((x,y), (x +1 , y +1))] ++ [((x,y), (x+1, y))] ++ [((x,y) , (x -1, y +1))] ++
+                                            						  [((x,y), (x  , y-1))]++ [((x,y), (x -1 , y -1))] ++ [((x,y), (x-1,y ))] ++ [((x,y) , (x +1, y -1))]
 generateMovesForGreedyStratUsingChar c (x,y) | c == 'X' || c == '#' = [ ((x,y) , (x - 2, y + 1))] ++ [((x,y) , (x-1, y+2))] ++ [((x,y) , (x+1, y+2))] ++ [((x, y) , (x+2, y+1))] ++
                                                                       [ ((x,y) , (x + 2, y - 1))] ++ [((x,y) , (x+1, y-2))] ++ [((x,y) , (x-1, y-2))] ++ [((x, y) , (x-2, y-1))] 
 

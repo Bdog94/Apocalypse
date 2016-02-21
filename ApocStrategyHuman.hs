@@ -18,8 +18,8 @@ import Data.Char
 
 -------------------------------------------------------------------------------------------------------------------------------------------------
 
-
-human    :: Chooser
+-- | human function
+human    :: Chooser -- ^ Chooser
 human b Normal        c = getMove
 human b PawnPlacement c = getPlacement
 
@@ -59,6 +59,7 @@ getGameMode = do
     putStrLn ">>>"
     let choices = [blackChoice, whiteChoice]
     return choices --return list of choices
+
 
 
 

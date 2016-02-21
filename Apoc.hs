@@ -569,9 +569,9 @@ generateMovesForGreedyStrat' _ _ = []
 --Additional check to ensure a player can only move their own piece
 isValidForPlayer :: Board -> Player -> [(Int,Int)] -> Bool
 isValidForPlayer board player [] = False
-isValidForPlayer board player (first:rest) =  if (((getFromBoard board first) == E) || (player == playerOf (pieceOf(getFromBoard board first))))  
-                                              then isValidMove board first (head rest)
-                                              else False
+isValidForPlayer board player (first:rest) | (getFromBoard board first) == E = False
+										   | (player == playerOf (pieceOf(getFromBoard board first)))  = isValidMove board first (head rest)
+                                           | True = False
                                       
 
 -- | Checks if a move is valid or not on the game board 
@@ -595,23 +595,18 @@ isValidMove theBoard (x,y) (w,z)
                || ((getFromBoard theBoard (w,z)) ==  WP))
         then True
         else False
-
-    |((getFromBoard theBoard (x,y)) == WP ) =               -- | A pawns move is valid if it:
-        if (((abs (x-w)) == 0) && ((y-z) == -1) && getFromBoard theBoard (w,z) == E)            -- | moves one space vertically into an open space
-        then True                                           -- | or move diagonally one space onto a space 
-        else if (((abs (x-w)) == 1) && ((y-z) == -1))       -- | occupied by an opponent's piece
-             && ( ((getFromBoard theBoard (w,z)) ==  BK)
-               || ((getFromBoard theBoard (w,z)) ==  BP))
-             then True
-             else False
-
-    |((getFromBoard theBoard (x,y)) == BP ) =
-        if (((abs (x-w)) == 0) && ((y-z) == 1) && getFromBoard theBoard (w,z)== E)
-        then True
-        else if (((abs (x-w)) == 1) && ((y-z) == 1)) 
-             && ( ((getFromBoard theBoard (w,z)) ==  WK)
-               || ((getFromBoard theBoard (w,z)) ==  WP))
-             then True
-             else False
-
-    |((getFromBoard theBoard (x,y)) == E )  = False
+ -- | A pawns move is valid if it:
+ -- | moves one space vertically into an open space
+ -- | or move diagonally one space onto a space 
+ -- | occupied by an opponent's piece
+    |((getFromBoard theBoard (x,y)) == WP ) && (((abs (x-w)) == 0) && ((y-z) == -1) && getFromBoard theBoard (w,z) == E)           
+        = True                                           
+    |((getFromBoard theBoard (x,y)) == WP ) && (((abs (x-w)) == 1) && ((y-z) == -1)) 
+	&& (((getFromBoard theBoard (w,z)) ==  BK) || ((getFromBoard theBoard (w,z)) ==  BP))
+             = True
+    |((getFromBoard theBoard (x,y)) == BP ) && (((abs (x-w)) == 0) && ((y-z) == 1) && getFromBoard theBoard (w,z) == E)           
+        = True                                           
+    |((getFromBoard theBoard (x,y)) == BP ) && (((abs (x-w)) == 1) && ((y-z) == 1)) 
+	&& (((getFromBoard theBoard (w,z)) ==  WK) || ((getFromBoard theBoard (w,z)) ==  WP))
+             = True
+    |True = False

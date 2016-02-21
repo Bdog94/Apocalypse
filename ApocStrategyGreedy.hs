@@ -88,7 +88,7 @@ determineMove [(source, dest)] b Normal player | player == White 	|| player == B
 determineMove ((source, dest) : list ) b PawnPlacement player  | player == White || player == Black
 														 =  chosePawn ( generateAllEmptyMoves (theBoard b) )
 determineMove [] b PawnPlacement _ =  chosePawn ( generateAllEmptyMoves (theBoard b) )
-determineMove [] _ _ _ = return(Nothing)
+determineMove [] b Normal player = return(Nothing)
 
 
 

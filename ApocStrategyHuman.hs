@@ -13,9 +13,7 @@ import Data.Char
 
 -------------------------------------------------------------------------------------------------------------------------------------------------
 
-{- | This is just a placeholder for the human strategy: it always chooses to play
-     (0,0) to (2,1).
--}
+
 human    :: Chooser
 human b Normal        c = getMove
 human b PawnPlacement c = getPlacement

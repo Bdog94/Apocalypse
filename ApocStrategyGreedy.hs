@@ -38,23 +38,25 @@ import AItools
 
 -}
 
-greedyTest1       :: GameState
+--| A test gamestate
+greedyTest1       :: GameState -- ^ Data structure used to store the gamestate information
 greedyTest1 = GameState Init 0 Init 0
                           [ [WK, WP, WP, BP, E],
                           [WP, WP , E , E , E],
                           [E , E , E , E , E ],
                           [BP, E , BK , E , BP],
                           [BK, BP, BP,  E , WK] ]
-                          
-greedyTestBoard2       :: GameState
+--| A test gamestate                          
+greedyTestBoard2       :: GameState -- ^ Data structure used to store the gamestate information
 greedyTestBoard2 = GameState Init 0 Init 0
                           [ [WK, WP, WP, E, BP],
                           [WP, WP , E , E , E ],
                           [E , E , E , E ,  E ],
                           [BP, E , BK , E ,  BP],
                           [BK, BP, BP,  E , WK] ]
-                          
-greedyTestBoard3       :: GameState
+       
+--| A test gamestate                          
+greedyTestBoard3       :: GameState  -- ^ Data structure used to store the gamestate information
 greedyTestBoard3  = GameState Init 0 Init 0
                           [ [E, E , WP, BK, E ],
                           [WP, E , WK , E , E ],
@@ -64,24 +66,25 @@ greedyTestBoard3  = GameState Init 0 Init 0
                           
                           
 
-
-
-greedyTest :: IO (Maybe [(Int, Int)])
+--| A test that will see what move the AI will take on the initial board
+greedyTest :: IO (Maybe [(Int, Int)]) -- ^ The move thae AI will take
 
 greedyTest =  greedy initBoard Normal White 
-			 
+
+-- | function used to see all the valid moves for White on the initBoard	 
 greedyTest2 = validMovesGenPlayer (theBoard initBoard) White (generateMovesForGreedyStrat (theBoard initBoard) ) 
 
 
 
--- |
-greedy :: Chooser 
+-- | function that is used to determine the move the greedy AI will take
+greedy :: Chooser -- ^ Data structure that contains information about the gamestate, playtype and the Player
 greedy b playType player = determineMove (validMovesGenPlayer (theBoard b) player (generateMovesForGreedyStrat (theBoard b))) b playType player
 
 
 
 -- | This function determines the move that the AI will take
-determineMove :: [ ((Int , Int) , (Int , Int) )] ->Chooser		
+determineMove :: [ ((Int , Int) , (Int , Int) )] -- ^ A list of the moves which are assumed to be valid in (source), (destination) form
+				 ->Chooser	 -- ^ Data structure that contains information about the gamestate, playtype and the Player	
 
 determineMove ((source, dest) : list) b Normal player         | player == White || player == Black
 							 = pickMoveGreedy(sortMoves( evalMoves ((source,dest) : list) b player ) )
@@ -95,9 +98,9 @@ determineMove [] b Normal player = return(Nothing)
 
 
 
--- Probably is not needed but makes it easier to select a move once the list has been sorted...
--- Also allows for a simple front to change if we need to add randomness						
-pickMoveGreedy :: [(Int, ((Int, Int), (Int, Int)))] -> IO (Maybe [(Int, Int)])
+-- | This is the method that will actually decide which move the greedy AI will take						
+pickMoveGreedy :: [(Int, ((Int, Int), (Int, Int)))] -> -- ^The list of moves in (value , ((source), (dest))) form 
+					IO (Maybe [(Int, Int)])	-- ^The data structure used to return the move selected
 
 pickMoveGreedy [(val, (source, dest))] = return( Just ( [(source),  (dest)]))
 pickMoveGreedy ((val_1, (source_1,dest_1)) : (val_2, (source_2, dest_2)) :xs ) = do 
@@ -107,15 +110,18 @@ pickMoveGreedy ((val_1, (source_1,dest_1)) : (val_2, (source_2, dest_2)) :xs ) =
    	  else return( Just([(source_1),  (dest_1)]))
 
  
-greedyComparator :: Int -> Bool
+-- | Allow for a small amount of randomness in the greedy AI
+greedyComparator :: Int -- ^ A random number
+				 -> Bool -- ^ Whether that number would allow for a true or false result
 
 greedyComparator num = if (num >= 9) 
 					   then True
 					   else False
  
  
---Sorts all the move objects       
-sortMoves :: [(Int, ((Int, Int), (Int, Int)))] -> [(Int, ((Int,Int), (Int, Int)) )]
+-- | Sorts the moves into descending order       
+sortMoves :: [(Int, ((Int, Int), (Int, Int)))] -- ^The unsorted list of moves in (value , ((source), (dest))) form 
+			-> [(Int, ((Int,Int), (Int, Int)) )]-- ^The sorted list of moves in (value , ((source), (dest))) form 
 sortMoves [] = []
 sortMoves ((val,(dest)):xs) = (sortMoves greater) ++ [(val,(dest))] ++ (sortMoves lesser)
      where
@@ -123,15 +129,19 @@ sortMoves ((val,(dest)):xs) = (sortMoves greater) ++ [(val,(dest))] ++ (sortMove
           greater = filter ( greaterComparator val) xs	
           
 
--- similar to >= val, the second value is the wrapper structure for a move
-greaterComparator :: Int-> (Int, ((Int, Int), (Int, Int))) -> Bool
+--| checks if a value of the pivot is greater than the value of the move
+greaterComparator :: Int -- ^ Value of a move (usually the pivot)
+					-> (Int, ((Int, Int), (Int, Int))) -- ^ The move that has been sent in, in (value, ((source), (dest)) form
+					-> Bool -- ^ is true if the value of the pivot is greater the move value
 
 greaterComparator val (val_1, ( _ , _))  = if val_1 >= val
                                           then True
                                           else False
     
--- similar to < val, the second value is the wrapper structure for a move                                      
-lessComparator :: Int-> (Int, ((Int, Int), (Int, Int))) -> Bool
+--| checks if a value of the pivot is less than the value of the move                                    
+lessComparator :: Int -- ^ Value of a move (usually the pivot)
+				  -> (Int, ((Int, Int), (Int, Int))) -- ^ The move that has been sent in, in (value, ((source), (dest)) form
+				  -> Bool -- ^ is true if the value of the pivot is less than the move value
 
 lessComparator val (val_1, ( _ , _))  = if val_1 >= val
                                           then False
@@ -139,17 +149,27 @@ lessComparator val (val_1, ( _ , _))  = if val_1 >= val
 
 
 
---The first int in the last part is the score the second last is the destination
-evalMoves ::  [ ((Int , Int) , (Int , Int) )] -> GameState -> Player -> [(Int, ((Int, Int), (Int, Int)))] 
+-- | This function goes through every move and gives it a score
+evalMoves ::  [ ((Int , Int) , (Int , Int) )] -- ^ The list of moves in ((source), (destination)) form
+			  -> GameState					  -- ^ Data structure used to store the gamestate information
+			  -> Player						  -- ^ The Player that is taking the move
+			  -> [(Int, ((Int, Int), (Int, Int)))] -- ^ List of moves in (value, ((source), (dest)) form
 
 evalMoves [] _ _ = []
 evalMoves ((source, dest):xs) game p =  [(evalMove (source,dest) game p, (source, dest))] ++ evalMoves xs game p
 
-evalMove  ::  ((Int , Int) , (Int , Int))    -> GameState -> Player -> Int
+-- | Function that will evaluate a single move
+evalMove  ::  ((Int , Int) , (Int , Int)) 
+			   -> GameState -- ^ Data structure used to store the gamestate information
+			   -> Player    -- ^ The Player that is taking the move
+			   -> Int		-- ^ The value of the move
 
 evalMove  ( (a,b), (c,d)) game player =  scoreMove player (cell2Char((getFromBoard (theBoard game) (c, d))))
 
-scoreMove :: Player -> Char -> Int
+-- | Function that gives a score based on the character and the player
+scoreMove :: Player -- ^ The Player that is taking the move
+			-> Char -- ^ The character that the move would take the piece to
+			-> Int  -- ^ Score given for moving to that destination
 
 scoreMove  Black 'X' = 5	--Black is taking out a White Knight
 scoreMove  White '#' = 5	--White is taking out a Black Knight
@@ -160,10 +180,13 @@ scoreMove  White  c  = 0
 
 
 
+
 rand = do
     return=<<randomRIO(0, 4 :: Int)
-    
-randomGen :: IO [Int]
+
+
+-- | randomly generates 4 ints  
+randomGen :: IO [Int] -- ^ A list of 4 random ints
 randomGen = do
     let randArr = [] :: [Int]
     randOne <- rand
@@ -174,8 +197,9 @@ randomGen = do
     return (randOne : randTwo: randThree: randFour : randArr)
     
     
-
-zeroToNum :: Int -> IO Int
+--| function that returns a random number from 0 to a number
+zeroToNum :: Int -- ^The highest the random number can be
+			  -> IO Int -- ^ A number between 0 to the num that is passed in
 zeroToNum num = getStdRandom $ randomR (0, num)
 
 

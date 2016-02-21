@@ -18,7 +18,8 @@ import AItools
 
 -}
 
-randomTest1       :: GameState
+-- | Test GameState
+randomTest1       :: GameState -- ^ Data structure used to store the gamestate information
 randomTest1 = GameState Init 0 Init 0
                           [ [E, E, WP, WP, WK],
                           [WP, BK , WK , E, E],
@@ -27,13 +28,16 @@ randomTest1 = GameState Init 0 Init 0
                           [E , BP, BP,  WP, E] ]
 
 
-
-randomStrategy :: Chooser
+-- | The chooser that is used for the RandomStrategy
+randomStrategy :: Chooser -- ^ Data structure that contains information about the gamestate, playtype and the Player
 
 randomStrategy b Normal        player = pickRandomMoveNormal b player
 randomStrategy b PawnPlacement player = pickRandomMovePawn (theBoard b) player
 
-pickRandomMoveNormal :: GameState -> Player -> IO(Maybe [(Int, Int)])
+--| function to return the random move the AI
+pickRandomMoveNormal :: GameState -- ^ Data structure used to store the gamestate information
+						-> Player -- ^ The Player to choose the move for
+						-> IO(Maybe [(Int, Int)]) -- ^ Data structure used to return the move
 
 pickRandomMoveNormal b player = choseRandom ( validMovesGenPlayer (theBoard b) player (generateMovesForGreedyStrat (theBoard b)) ) 
 
@@ -41,22 +45,20 @@ pickRandomMovePawn b player = chosePawn ( generateAllEmptyMoves b )
 
 
 
-
-choseRandom :: [((Int,Int) , (Int, Int))] -> IO (Maybe [(Int,Int)])
+--| Method that actually picks the random move
+choseRandom :: [((Int,Int) , (Int, Int))] -- ^List of moves in ((source), (dest)) form
+			    -> IO (Maybe [(Int,Int)]) -- ^ Data structure used to return the move
 choseRandom []   = return(Nothing)
 choseRandom list = do 
    	  int <- randomRIO (0 , (length list -1))
    	  return (Just (getNormalMoveAtIndex list int))
-   --if int == 0 
-   --then return [[source] , [dest]]
-   --else return (getNormalMoveAtIndex ((source:dest):xs) int)
-
-useInt :: Int -> Int 
-useInt x = x+10
 
 
 
-getNormalMoveAtIndex :: [((Int , Int), (Int, Int))] -> Int -> [(Int, Int)]
+--| Used to get the move at a certain index in the moves list
+getNormalMoveAtIndex :: [((Int , Int), (Int, Int))] -- ^List of moves in ((source), (dest)) form
+						-> Int						-- ^Index of the move to be chosen
+						-> [(Int, Int)]				-- ^The move that is to be returned
 
 getNormalMoveAtIndex [] _ = []
 getNormalMoveAtIndex [(source, dest)] _ = [(source), (dest)]

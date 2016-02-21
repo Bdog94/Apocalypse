@@ -95,7 +95,7 @@ isValidMove theBoard (x,y) (w,z)
         else False
 
     |((getFromBoard theBoard (x,y)) == WP ) =               -- | A pawns move is valid if it:
-        if (((abs (x-w)) == 0) && ((y-z) == -1))            -- | moves one space vertically into an open space
+        if (((abs (x-w)) == 0) && ((y-z) == -1) && getFromBoard theBoard (w,z) == E)            -- | moves one space vertically into an open space
         then True                                           -- | or move diagonally one space onto a space 
         else if (((abs (x-w)) == 1) && ((y-z) == -1))       -- | occupied by an opponent's piece
              && ( ((getFromBoard theBoard (w,z)) ==  BK)
@@ -104,7 +104,7 @@ isValidMove theBoard (x,y) (w,z)
              else False
 
     |((getFromBoard theBoard (x,y)) == BP ) =
-        if (((abs (x-w)) == 0) && ((y-z) == 1))
+        if (((abs (x-w)) == 0) && ((y-z) == 1) && getFromBoard theBoard (w,z)== E)
         then True
         else if (((abs (x-w)) == 1) && ((y-z) == 1)) 
              && ( ((getFromBoard theBoard (w,z)) ==  WK)

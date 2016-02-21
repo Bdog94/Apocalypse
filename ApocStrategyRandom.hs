@@ -1,3 +1,12 @@
+{- | Module: ApocStrategyGreedy.hs
+
+Implements the functionality of the random strategy.
+Use the randomStrategy :: Chooser method to get the move for the AI
+
+Created for the CPSC 449 haskell assignment 
+
+-}
+
 module ApocStrategyRandom where
 
 import Control.Monad.Trans.State.Lazy
@@ -34,18 +43,23 @@ randomStrategy :: Chooser -- ^ Data structure that contains information about th
 randomStrategy b Normal        player = pickRandomMoveNormal b player
 randomStrategy b PawnPlacement player = pickRandomMovePawn (theBoard b) player
 
---| function to return the random move the AI
+-- | function to return the random move the AI
 pickRandomMoveNormal :: GameState -- ^ Data structure used to store the gamestate information
 						-> Player -- ^ The Player to choose the move for
 						-> IO(Maybe [(Int, Int)]) -- ^ Data structure used to return the move
 
 pickRandomMoveNormal b player = choseRandom ( validMovesGenPlayer (theBoard b) player (generateMovesForGreedyStrat (theBoard b)) ) 
 
+-- | This function is used to pick a random move for pawn placement
+pickRandomMovePawn :: Board -- ^ Data structure used to store the board information
+					  -> Player -- ^ The Player to choose the move for
+					  -> IO(Maybe [(Int, Int)]) -- ^ Data structure used to return the move
+					  
 pickRandomMovePawn b player = chosePawn ( generateAllEmptyMoves b )
 
 
 
---| Method that actually picks the random move
+-- | Method that actually picks the random move
 choseRandom :: [((Int,Int) , (Int, Int))] -- ^List of moves in ((source), (dest)) form
 			    -> IO (Maybe [(Int,Int)]) -- ^ Data structure used to return the move
 choseRandom []   = return(Nothing)
@@ -55,7 +69,7 @@ choseRandom list = do
 
 
 
---| Used to get the move at a certain index in the moves list
+-- | Used to get the move at a certain index in the moves list
 getNormalMoveAtIndex :: [((Int , Int), (Int, Int))] -- ^List of moves in ((source), (dest)) form
 						-> Int						-- ^Index of the move to be chosen
 						-> [(Int, Int)]				-- ^The move that is to be returned

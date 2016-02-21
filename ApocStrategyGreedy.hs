@@ -1,4 +1,11 @@
+{- | Module: ApocStrategyGreedy.hs
 
+Implements the functionality of the greedy strategy.
+Use the greedy :: Chooser method to get the move for the AI
+
+Created for the CPSC 449 haskell assignment 
+
+-}
 module ApocStrategyGreedy where
 
 import Control.Monad.Trans.State.Lazy
@@ -38,7 +45,7 @@ import AItools
 
 -}
 
---| A test gamestate
+-- | A test gamestate
 greedyTest1       :: GameState -- ^ Data structure used to store the gamestate information
 greedyTest1 = GameState Init 0 Init 0
                           [ [WK, WP, WP, BP, E],
@@ -46,7 +53,7 @@ greedyTest1 = GameState Init 0 Init 0
                           [E , E , E , E , E ],
                           [BP, E , BK , E , BP],
                           [BK, BP, BP,  E , WK] ]
---| A test gamestate                          
+-- | A test gamestate                          
 greedyTestBoard2       :: GameState -- ^ Data structure used to store the gamestate information
 greedyTestBoard2 = GameState Init 0 Init 0
                           [ [WK, WP, WP, E, BP],
@@ -55,7 +62,7 @@ greedyTestBoard2 = GameState Init 0 Init 0
                           [BP, E , BK , E ,  BP],
                           [BK, BP, BP,  E , WK] ]
        
---| A test gamestate                          
+-- | A test gamestate                          
 greedyTestBoard3       :: GameState  -- ^ Data structure used to store the gamestate information
 greedyTestBoard3  = GameState Init 0 Init 0
                           [ [E, E , WP, BK, E ],
@@ -66,7 +73,7 @@ greedyTestBoard3  = GameState Init 0 Init 0
                           
                           
 
---| A test that will see what move the AI will take on the initial board
+-- | A test that will see what move the AI will take on the initial board
 greedyTest :: IO (Maybe [(Int, Int)]) -- ^ The move thae AI will take
 
 greedyTest =  greedy initBoard Normal White 
@@ -99,8 +106,8 @@ determineMove [] b Normal player = return(Nothing)
 
 
 -- | This is the method that will actually decide which move the greedy AI will take						
-pickMoveGreedy :: [(Int, ((Int, Int), (Int, Int)))] -> -- ^The list of moves in (value , ((source), (dest))) form 
-					IO (Maybe [(Int, Int)])	-- ^The data structure used to return the move selected
+pickMoveGreedy :: [(Int, ((Int, Int), (Int, Int)))] -- ^The list of moves in (value , ((source), (dest))) form 
+					-> IO (Maybe [(Int, Int)])	-- ^The data structure used to return the move selected
 
 pickMoveGreedy [(val, (source, dest))] = return( Just ( [(source),  (dest)]))
 pickMoveGreedy ((val_1, (source_1,dest_1)) : (val_2, (source_2, dest_2)) :xs ) = do 
@@ -129,7 +136,7 @@ sortMoves ((val,(dest)):xs) = (sortMoves greater) ++ [(val,(dest))] ++ (sortMove
           greater = filter ( greaterComparator val) xs	
           
 
---| checks if a value of the pivot is greater than the value of the move
+-- | checks if a value of the pivot is greater than the value of the move
 greaterComparator :: Int -- ^ Value of a move (usually the pivot)
 					-> (Int, ((Int, Int), (Int, Int))) -- ^ The move that has been sent in, in (value, ((source), (dest)) form
 					-> Bool -- ^ is true if the value of the pivot is greater the move value
@@ -138,7 +145,7 @@ greaterComparator val (val_1, ( _ , _))  = if val_1 >= val
                                           then True
                                           else False
     
---| checks if a value of the pivot is less than the value of the move                                    
+-- | checks if a value of the pivot is less than the value of the move                                    
 lessComparator :: Int -- ^ Value of a move (usually the pivot)
 				  -> (Int, ((Int, Int), (Int, Int))) -- ^ The move that has been sent in, in (value, ((source), (dest)) form
 				  -> Bool -- ^ is true if the value of the pivot is less than the move value
@@ -180,7 +187,7 @@ scoreMove  White  c  = 0
 
 
 
-
+-- | randomly generates numbers
 rand = do
     return=<<randomRIO(0, 4 :: Int)
 
@@ -197,7 +204,7 @@ randomGen = do
     return (randOne : randTwo: randThree: randFour : randArr)
     
     
---| function that returns a random number from 0 to a number
+-- | function that returns a random number from 0 to a number
 zeroToNum :: Int -- ^The highest the random number can be
 			  -> IO Int -- ^ A number between 0 to the num that is passed in
 zeroToNum num = getStdRandom $ randomR (0, num)

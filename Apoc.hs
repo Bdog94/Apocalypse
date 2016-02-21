@@ -578,11 +578,11 @@ isValidForPlayer board player (first:rest) | (getFromBoard board first) == E = F
 isValidMove :: Board -> (Int,Int) -> (Int,Int) -> Bool
 isValidMove theBoard (x,y) (w,z)
     | (x<0) || (x>4)|| (y<0) || (y>4) || (w<0) || (w>4) || (z<0) || (z>4) = False
-    |((getFromBoard theBoard (x,y)) == WK ) =               -- | A knights move is valid if it:
-        if (((abs (x-w))<3) && ((abs (y-z)))<3)             -- | moves 2 spaces on one axis, and one space on the other 
-           && (((abs (x-w)) + (abs (y-z))) == 3)            -- | (totaling 3 spaces)
-           && (((getFromBoard theBoard (w,z)) ==  E)        -- | and if the target space is empty 
-               || ((getFromBoard theBoard (w,z)) ==  BK)    -- |or contains an opponent's piece.
+    |((getFromBoard theBoard (x,y)) == WK ) =               --  A knights move is valid if it:
+        if (((abs (x-w))<3) && ((abs (y-z)))<3)             --  moves 2 spaces on one axis, and one space on the other 
+           && (((abs (x-w)) + (abs (y-z))) == 3)            --  (totaling 3 spaces)
+           && (((getFromBoard theBoard (w,z)) ==  E)        --  and if the target space is empty 
+               || ((getFromBoard theBoard (w,z)) ==  BK)    --  or contains an opponent's piece.
                || ((getFromBoard theBoard (w,z)) ==  BP))
         then True
         else False
@@ -595,10 +595,10 @@ isValidMove theBoard (x,y) (w,z)
                || ((getFromBoard theBoard (w,z)) ==  WP))
         then True
         else False
- -- | A pawns move is valid if it:
- -- | moves one space vertically into an open space
- -- | or move diagonally one space onto a space 
- -- | occupied by an opponent's piece
+ --  A pawns move is valid if it:
+ --  moves one space vertically into an open space
+ --  or move diagonally one space onto a space 
+ --  occupied by an opponent's piece
     |((getFromBoard theBoard (x,y)) == WP ) && (((abs (x-w)) == 0) && ((y-z) == -1) && getFromBoard theBoard (w,z) == E)           
         = True                                           
     |((getFromBoard theBoard (x,y)) == WP ) && (((abs (x-w)) == 1) && ((y-z) == -1)) 

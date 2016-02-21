@@ -47,7 +47,7 @@ getPlacement = do
 
 getGameMode :: IO [String] -- ^ returns list with first element being black player strategy and second element being white player strategy.
 getGameMode = do
-    putStrLn "Possible strategies: \n  human\n  greedy\nEnter the strategy for BLACK:"
+    putStrLn "Possible strategies: \n  human\n  greedy\n  random\nEnter the strategy for BLACK:"
     blackChoice <-getLine --assign input to blackChoice
             
     putStrLn "Enter the strategy for WHITE:"

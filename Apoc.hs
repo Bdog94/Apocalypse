@@ -128,23 +128,23 @@ gameLoop :: GameState -- ^ state of game
          -> String -- ^ white player strategy
          -> String -- ^ black player strategy
          -> IO ()
-gameLoop state wStrat bStrat | (blackPlay state == Passed) && (whitePlay state == Passed) 
+gameLoop state bStrat wStrat | (blackPlay state == Passed) && (whitePlay state == Passed) 
                                 || not(isWinner state == Nothing) =  do 
 																		print state 
 								
-																		(putStrLn (getWinnerString state wStrat bStrat))
+																		(putStrLn (getWinnerString state bStrat wStrat))
                              | ((pawn2Upgrade state) == True) && 
                                (((countPiece (flatten (theBoard state)) BK)  < 2) && (getPawnPlayer (theBoard state) (getPawn(theBoard state)) == Black))
                                 = do 
                                     print state
                                                                                         
-                                    (gameLoop (handlePromotion state (getPawnPlayer (theBoard state) (getPawn(theBoard state)))) wStrat bStrat)
+                                    (gameLoop (handlePromotion state (getPawnPlayer (theBoard state) (getPawn(theBoard state)))) bStrat wStrat)
                              | ((pawn2Upgrade state) == True) && 
                                (((countPiece (flatten (theBoard state)) WK)  < 2) && (getPawnPlayer (theBoard state) (getPawn(theBoard state)) == White))
                                 = do 
                                     print state
                                                                                         
-                                    (gameLoop (handlePromotion state (getPawnPlayer (theBoard state) (getPawn(theBoard state)))) wStrat bStrat)
+                                    (gameLoop (handlePromotion state (getPawnPlayer (theBoard state) (getPawn(theBoard state)))) bStrat wStrat)
                              | ((pawn2Upgrade state) == True) && (getPawnPlayer (theBoard state) (getPawn(theBoard state)) == Black)
                                        = do 
                                                 print state
@@ -152,7 +152,7 @@ gameLoop state wStrat bStrat | (blackPlay state == Passed) && (whitePlay state =
                                                 then "Enter the coordinates to place the pawn for player Black in the form 'destX destY'\n(0 >= n >= 4, or just enter return for a 'pass') B2:\n"
                                                 else "")
                                                 move <- pickMove bStrat state PawnPlacement Black
-                                                (gameLoop (handlePlacement state move Black) wStrat bStrat)
+                                                (gameLoop (handlePlacement state move Black) bStrat wStrat)
                              | ((pawn2Upgrade state) == True) && (getPawnPlayer (theBoard state) (getPawn(theBoard state)) == White)
                                        = do 
                                                 print state
@@ -160,7 +160,7 @@ gameLoop state wStrat bStrat | (blackPlay state == Passed) && (whitePlay state =
                                                 then "Enter the coordinates to place the pawn for player White in the form 'destX destY'\n(0 >= n >= 4, or just enter return for a 'pass') W2:\n"
                                                 else "")
                                                 move <- pickMove wStrat state PawnPlacement White
-                                                (gameLoop (handlePlacement state move White) wStrat bStrat)
+                                                (gameLoop (handlePlacement state move White) bStrat wStrat)
                              | True = do  
                                             print state
                                         
@@ -172,7 +172,7 @@ gameLoop state wStrat bStrat | (blackPlay state == Passed) && (whitePlay state =
                                             then "Enter the move coordinates for player White in the form 'srcX srcY destX destY'\n(0 >= n >= 4, or just enter return for a 'pass') W1:\n"
                                             else "")
                                             wMove <- pickMove wStrat state Normal White
-                                            gameLoop (updateState state bMove wMove) wStrat bStrat
+                                            gameLoop (updateState state bMove wMove) bStrat wStrat
                                         
                                         
 -- Takes the current GameState and the 2 players moves
@@ -322,16 +322,16 @@ getWinnerString :: GameState -- ^ Initial Game State
                    -> String -- ^ Black Player Strategy
                    -> String -- ^ Returned Information String
                    
-getWinnerString state wStrat bStrat| (whitePen state) >= 2 =    "Black wins!\tBlack (" ++ bStrat ++ "): " ++ [(intToDigit(countPiece (flatten (theBoard state)) BP ))]
+getWinnerString state bStrat wStrat| (whitePen state) >= 2 =    "Black wins!\tBlack (" ++ bStrat ++ "): " ++ [(intToDigit(countPiece (flatten (theBoard state)) BP ))]
         ++ "\tWhite (" ++ wStrat ++ "): " ++ [(intToDigit(countPiece (flatten (theBoard state)) WP))]
-getWinnerString state wStrat bStrat| (blackPen state) >= 2 =    "White wins!\tBlack (" ++ bStrat ++ "): " ++ [(intToDigit(countPiece (flatten (theBoard state)) BP ))]
+getWinnerString state bStrat wStrat| (blackPen state) >= 2 =    "White wins!\tBlack (" ++ bStrat ++ "): " ++ [(intToDigit(countPiece (flatten (theBoard state)) BP ))]
         ++ "\tWhite (" ++ wStrat ++ "): " ++ [(intToDigit(countPiece (flatten (theBoard state)) WP))]    
-getWinnerString state wStrat bStrat| countPiece (flatten (theBoard state)) BP == countPiece (flatten (theBoard state)) WP 
+getWinnerString state bStrat wStrat| countPiece (flatten (theBoard state)) BP == countPiece (flatten (theBoard state)) WP 
     =    "The game was a Draw."
-getWinnerString state wStrat bStrat| countPiece (flatten (theBoard state)) BP > countPiece (flatten (theBoard state)) WP 
+getWinnerString state bStrat wStrat| countPiece (flatten (theBoard state)) BP > countPiece (flatten (theBoard state)) WP 
     =    "Black wins!\tBlack (" ++ bStrat ++ "): " ++ [(intToDigit(countPiece (flatten (theBoard state)) BP ))]
         ++ "\tWhite (" ++ wStrat ++ "): " ++ [(intToDigit(countPiece (flatten (theBoard state)) WP))]
-getWinnerString state wStrat bStrat| countPiece (flatten (theBoard state)) BP < countPiece (flatten (theBoard state)) WP 
+getWinnerString state bStrat wStrat| countPiece (flatten (theBoard state)) BP < countPiece (flatten (theBoard state)) WP 
     =    "White wins!\tBlack (" ++ bStrat ++ "): " ++ [(intToDigit(countPiece (flatten (theBoard state)) BP ))]
         ++ "\tWhite (" ++ wStrat ++ "): " ++ [(intToDigit(countPiece (flatten (theBoard state)) WP))]    
 
